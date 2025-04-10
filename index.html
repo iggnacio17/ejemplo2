@@ -1,35 +1,200 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Galería de Videos</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>App de Videos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ffe5f1;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #d63384;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    input {
+      width: 300px;
+    }
+
+    button {
+      background: #ff69b4;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #d63384;
+    }
+
+    #galeria {
+      margin-top: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    #galeria img {
+      width: 200px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    #galeria img:hover {
+      transform: scale(1.05);
+    }
+
+    #menuContextual {
+      position: absolute;
+      display: none;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 9999;
+      font-size: 14px;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    #menuContextual div {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    #menuContextual div:hover {
+      background: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
 
-  <div class="login-container" id="loginContainer">
-    <h1>Iniciar sesión</h1>
-    <input type="text" id="username" placeholder="Usuario">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button onclick="login()">Entrar</button>
+  <h1>🌸 App de Videos Kitty 🌸</h1>
+
+  <!-- Login -->
+  <div id="loginContainer">
+    <input type="text" id="username" placeholder="Usuario"><br>
+    <input type="password" id="password" placeholder="Contraseña"><br>
+    <button onclick="login()">Iniciar sesión</button>
   </div>
 
-  <div class="app-container" id="appContainer" style="display:none;">
-    <h1>Mis Videos</h1>
-    <input type="text" id="videoUrl" placeholder="Enlace del video">
-    <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
+  <!-- App -->
+  <div id="appContainer" style="display: none;">
+    <input type="text" id="videoUrl" placeholder="Enlace del video"><br>
+    <input type="text" id="imageUrl" placeholder="Enlace de la imagen"><br>
     <button onclick="guardarVideo()">Guardar</button>
 
-    <div class="gallery" id="galeria"></div>
+    <div id="galeria"></div>
   </div>
 
   <!-- Menú contextual personalizado -->
-  <div id="menuContextual" class="context-menu">
-    <button onclick="abrirVideoEnNuevoTab()">Abrir en pestaña normal</button>
-    <button onclick="copiarYMostrar()">Copiar enlace para modo incógnito</button>
+  <div id="menuContextual">
+    <div id="abrirPestana">🔗 Abrir en nueva pestaña</div>
+    <div id="copiarEnlace">📋 Copiar enlace</div>
+    <div id="instrucciones">🕵️ Abrir en incógnito</div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    const USUARIO = "kitty";
+    const PASSWORD = "1234";
+
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      if (user === USUARIO && pass === PASSWORD) {
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("appContainer").style.display = "block";
+        cargarVideos();
+      } else {
+        alert("Usuario o contraseña incorrectos");
+      }
+    }
+
+    function guardarVideo() {
+      const videoUrl = document.getElementById("videoUrl").value;
+      const imageUrl = document.getElementById("imageUrl").value;
+
+      if (!videoUrl || !imageUrl) {
+        alert("Faltan campos");
+        return;
+      }
+
+      const video = { videoUrl, imageUrl };
+      let lista = JSON.parse(localStorage.getItem("videos")) || [];
+      lista.push(video);
+      localStorage.setItem("videos", JSON.stringify(lista));
+
+      document.getElementById("videoUrl").value = "";
+      document.getElementById("imageUrl").value = "";
+
+      cargarVideos();
+    }
+
+    function cargarVideos() {
+      const galeria = document.getElementById("galeria");
+      galeria.innerHTML = "";
+      const lista = JSON.parse(localStorage.getItem("videos")) || [];
+
+      lista.forEach((video) => {
+        const img = document.createElement("img");
+        img.src = video.imageUrl;
+        img.title = "Haz clic para abrir el video";
+        img.onclick = () => window.open(video.videoUrl, "_blank");
+
+        img.oncontextmenu = (e) => {
+          e.preventDefault();
+          mostrarMenuContextual(e.pageX, e.pageY, video.videoUrl);
+        };
+
+        galeria.appendChild(img);
+      });
+    }
+
+    function mostrarMenuContextual(x, y, videoUrl) {
+      const menu = document.getElementById("menuContextual");
+      menu.style.display = "block";
+      menu.style.left = `${x}px`;
+      menu.style.top = `${y}px`;
+
+      document.getElementById("abrirPestana").onclick = () => {
+        window.open(videoUrl, "_blank");
+        menu.style.display = "none";
+      };
+
+      document.getElementById("copiarEnlace").onclick = async () => {
+        await navigator.clipboard.writeText(videoUrl);
+        alert("¡Enlace copiado!");
+        menu.style.display = "none";
+      };
+
+      document.getElementById("instrucciones").onclick = () => {
+        alert("Para abrir el video en incógnito:\n1. Copia el enlace.\n2. Abre una ventana en modo incógnito.\n3. Pega el enlace allí.");
+        menu.style.display = "none";
+      };
+    }
+
+    // Ocultar menú al hacer clic fuera
+    window.addEventListener("click", () => {
+      document.getElementById("menuContextual").style.display = "none";
+    });
+  </script>
+
 </body>
 </html>
