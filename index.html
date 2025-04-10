@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi App Web - Cámara</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Galería de Videos</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #d8b1da;
+      background: #f5e0f7;
       margin: 0;
       padding: 20px;
       text-align: center;
@@ -15,69 +15,118 @@
     h1 {
       color: #333;
     }
-    button {
-      background: #007bff;
-      color: white;
-      padding: 10px 20px;
-      border: none;
+    .login-container, .app-container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
       border-radius: 10px;
+      border: 1px solid #ccc;
+      width: 90%;
       font-size: 16px;
+    }
+    button {
+      background: #7b2cbf;
+      color: white;
       cursor: pointer;
-      margin: 10px;
     }
     button:hover {
-      background: #0056b3;
+      background: #5a189a;
     }
-    #video, #foto {
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .gallery img {
       width: 100%;
-      max-width: 400px;
-      margin-top: 20px;
-      border-radius: 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s;
     }
-    #mensaje {
-      margin-top: 20px;
-      font-size: 18px;
+    .gallery img:hover {
+      transform: scale(1.05);
     }
   </style>
 </head>
 <body>
 
-  <h1>¡Hola Kitty!</h1>
-  <button onclick="iniciarCamara()">Activar Cámara</button>
-  <button onclick="tomarFoto()">Tomar Foto</button>
-  <div id="mensaje"></div>
+  <div class="login-container" id="loginContainer">
+    <h1>Iniciar sesión</h1>
+    <input type="text" id="username" placeholder="Usuario">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Entrar</button>
+  </div>
 
-  <video id="video" autoplay></video>
-  <canvas id="canvas" style="display:none;"></canvas>
-  <img id="foto" alt="Tu foto aparecerá aquí">
+  <div class="app-container" id="appContainer" style="display:none;">
+    <h1>Mis Videos</h1>
+    <input type="text" id="videoUrl" placeholder="Enlace del video">
+    <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
+    <button onclick="guardarVideo()">Guardar</button>
+
+    <div class="gallery" id="galeria"></div>
+  </div>
 
   <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const foto = document.getElementById('foto');
-    const mensaje = document.getElementById('mensaje');
+    // Datos simulados de login
+    const USUARIO = "kitty";
+    const PASSWORD = "1234";
 
-    async function iniciarCamara() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-        mensaje.innerText = "¡Cámara activada!";
-      } catch (error) {
-        mensaje.innerText = "No se pudo acceder a la cámara 😢";
-        console.error(error);
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      if (user === USUARIO && pass === PASSWORD) {
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("appContainer").style.display = "block";
+        cargarVideos();
+      } else {
+        alert("Usuario o contraseña incorrectos");
       }
     }
 
-    function tomarFoto() {
-      const contexto = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imagenData = canvas.toDataURL('image/png');
-      foto.src = imagenData;
-      mensaje.innerText = "📸 ¡Foto tomada!";
+    function guardarVideo() {
+      const videoUrl = document.getElementById("videoUrl").value;
+      const imageUrl = document.getElementById("imageUrl").value;
+
+      if (!videoUrl || !imageUrl) {
+        alert("Faltan campos");
+        return;
+      }
+
+      const video = { videoUrl, imageUrl };
+      let lista = JSON.parse(localStorage.getItem("videos")) || [];
+      lista.push(video);
+      localStorage.setItem("videos", JSON.stringify(lista));
+
+      document.getElementById("videoUrl").value = "";
+      document.getElementById("imageUrl").value = "";
+
+      cargarVideos();
+    }
+
+    function cargarVideos() {
+      const galeria = document.getElementById("galeria");
+      galeria.innerHTML = "";
+      const lista = JSON.parse(localStorage.getItem("videos")) || [];
+
+      lista.forEach(video => {
+        const img = document.createElement("img");
+        img.src = video.imageUrl;
+        img.title = "Ver video";
+        img.onclick = () => {
+          window.open(video.videoUrl, "_blank");
+        };
+        galeria.appendChild(img);
+      });
     }
   </script>
-
 </body>
 </html>
