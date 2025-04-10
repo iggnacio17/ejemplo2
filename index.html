@@ -207,13 +207,22 @@
       cargarVideos(true);
     }
 
-    function cargarVideos(aleatorio = false) {
+    function cargarVideos(aleatorio = false, filtro = '') {
       const videos = getData(videosKey);
       const favoritos = getData(favoritosKey);
       let mostrar = videos;
 
-      if (aleatorio) {
+      if (aleatorio && filtro === '') {
         mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
+      }
+
+      if (filtro !== '') {
+        const f = filtro.toLowerCase();
+        mostrar = videos.filter(video =>
+          video.videoNombre.toLowerCase().includes(f) ||
+          (video.actriz && video.actriz.toLowerCase().includes(f)) ||
+          (video.categoria && video.categoria.toLowerCase().includes(f))
+        );
       }
 
       galeria.innerHTML = '';
@@ -255,6 +264,11 @@
       });
 
       cargarFavoritos();
+    }
+
+    function filtrarVideos() {
+      const texto = buscador.value.trim();
+      cargarVideos(false, texto);
     }
 
     function cargarFavoritos() {
