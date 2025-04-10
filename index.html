@@ -109,7 +109,7 @@
 
   <div class="tab active" id="galeriaTab">
     <div style="text-align: center; margin: 10px 0;">
-      <input type="text" id="buscador" placeholder="Buscar por nombre o categoría">
+      <input type="text" id="buscador" placeholder="Buscar por nombre o categoría" onkeyup="filtrarVideos()">
       <button onclick="filtrarVideos()">Buscar</button>
     </div>
     <div class="galeria" id="galeria"></div>
@@ -314,6 +314,54 @@
       setData(favoritosKey, favoritos);
 
       cargarVideos();
+    }
+
+    function filtrarVideos() {
+      const query = buscador.value.toLowerCase();
+      const videos = getData(videosKey);
+
+      const resultados = videos.filter(video => 
+        video.videoNombre.toLowerCase().includes(query) || 
+        video.categoria.toLowerCase().includes(query)
+      );
+
+      galeria.innerHTML = '';
+      resultados.forEach((video) => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+
+        const img = document.createElement('img');
+        img.src = video.imageUrl;
+        img.onclick = () => window.open(video.videoUrl, '_blank');
+
+        const nombre = document.createElement('div');
+        nombre.className = 'video-name';
+        nombre.textContent = video.videoNombre;
+
+        const desc = document.createElement('p');
+        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+
+        const controls = document.createElement('div');
+
+        const star = document.createElement('span');
+        star.textContent = favoritos.includes(video.videoUrl) ? '⭐' : '☆';
+        star.style.cursor = 'pointer';
+        star.onclick = () => toggleFavorito(video.videoUrl);
+
+        const trash = document.createElement('span');
+        trash.textContent = ' 🗑️';
+        trash.style.cursor = 'pointer';
+        trash.onclick = () => eliminarVideo(video.videoUrl);
+
+        controls.appendChild(star);
+        controls.appendChild(trash);
+
+        card.appendChild(img);
+        card.appendChild(nombre);
+        card.appendChild(desc);
+        card.appendChild(controls);
+        galeria.appendChild(card);
+      });
     }
 
     function pedirContrasena() {
