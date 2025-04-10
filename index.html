@@ -1,200 +1,194 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>App de Videos</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor de Videos</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #ffe5f1;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1e1e1e;
+      color: #ffffff;
       margin: 0;
       padding: 20px;
+    }
+    h1 {
+      color: #ffffff;
       text-align: center;
     }
-
-    h1 {
-      color: #d63384;
-    }
-
-    input, button {
+    .formulario, .galeria {
+      max-width: 800px;
+      margin: auto;
       padding: 10px;
-      margin: 5px;
-      border: none;
+      background: #2c2c2c;
       border-radius: 10px;
-      font-size: 16px;
+      margin-bottom: 20px;
     }
-
-    input {
-      width: 300px;
+    input, select, button {
+      padding: 8px;
+      margin: 5px;
+      border-radius: 5px;
+      border: none;
     }
-
+    input, select {
+      width: 200px;
+    }
     button {
-      background: #ff69b4;
+      background-color: #4CAF50;
       color: white;
       cursor: pointer;
     }
-
     button:hover {
-      background: #d63384;
+      background-color: #45a049;
     }
-
-    #galeria {
-      margin-top: 30px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
-    }
-
-    #galeria img {
-      width: 200px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 15px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    #galeria img:hover {
-      transform: scale(1.05);
-    }
-
-    #menuContextual {
-      position: absolute;
-      display: none;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 9999;
-      font-size: 14px;
-      overflow: hidden;
-      text-align: left;
-    }
-
-    #menuContextual div {
+    .video-card {
+      background: #3a3a3a;
       padding: 10px;
+      border-radius: 10px;
+      margin: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .video-card img {
+      width: 100%;
+      max-width: 300px;
+      border-radius: 10px;
       cursor: pointer;
     }
-
-    #menuContextual div:hover {
-      background: #f0f0f0;
+    .video-card p {
+      margin: 5px 0;
     }
   </style>
 </head>
 <body>
-
-  <h1>🌸 App de Videos Kitty 🌸</h1>
-
-  <!-- Login -->
-  <div id="loginContainer">
-    <input type="text" id="username" placeholder="Usuario"><br>
-    <input type="password" id="password" placeholder="Contraseña"><br>
-    <button onclick="login()">Iniciar sesión</button>
+  <h1>🎥 Gestor de Videos</h1>
+  <div class="formulario">
+    <input type="text" id="videoUrl" placeholder="Enlace del video">
+    <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
+    <input type="text" id="nuevaActriz" placeholder="Agregar actriz">
+    <select id="actrizSelect"></select>
+    <input type="text" id="nuevaCategoria" placeholder="Agregar categoría">
+    <select id="categoriaSelect"></select>
+    <select id="carpetaSelect"></select>
+    <input type="text" id="nuevaCarpeta" placeholder="Nueva carpeta">
+    <button onclick="guardarVideo()">Guardar Video</button>
   </div>
 
-  <!-- App -->
-  <div id="appContainer" style="display: none;">
-    <input type="text" id="videoUrl" placeholder="Enlace del video"><br>
-    <input type="text" id="imageUrl" placeholder="Enlace de la imagen"><br>
-    <button onclick="guardarVideo()">Guardar</button>
-
-    <div id="galeria"></div>
-  </div>
-
-  <!-- Menú contextual personalizado -->
-  <div id="menuContextual">
-    <div id="abrirPestana">🔗 Abrir en nueva pestaña</div>
-    <div id="copiarEnlace">📋 Copiar enlace</div>
-    <div id="instrucciones">🕵️ Abrir en incógnito</div>
-  </div>
+  <div class="galeria" id="galeria"></div>
 
   <script>
-    const USUARIO = "kitty";
-    const PASSWORD = "1234";
+    const actoresKey = 'actrices';
+    const categoriasKey = 'categorias';
+    const carpetasKey = 'carpetas';
+    const videosKey = 'videos';
 
-    function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
+    const actrizSelect = document.getElementById('actrizSelect');
+    const categoriaSelect = document.getElementById('categoriaSelect');
+    const carpetaSelect = document.getElementById('carpetaSelect');
 
-      if (user === USUARIO && pass === PASSWORD) {
-        document.getElementById("loginContainer").style.display = "none";
-        document.getElementById("appContainer").style.display = "block";
-        cargarVideos();
-      } else {
-        alert("Usuario o contraseña incorrectos");
-      }
+    function getData(key) {
+      return JSON.parse(localStorage.getItem(key)) || [];
     }
 
-    function guardarVideo() {
-      const videoUrl = document.getElementById("videoUrl").value;
-      const imageUrl = document.getElementById("imageUrl").value;
-
-      if (!videoUrl || !imageUrl) {
-        alert("Faltan campos");
-        return;
-      }
-
-      const video = { videoUrl, imageUrl };
-      let lista = JSON.parse(localStorage.getItem("videos")) || [];
-      lista.push(video);
-      localStorage.setItem("videos", JSON.stringify(lista));
-
-      document.getElementById("videoUrl").value = "";
-      document.getElementById("imageUrl").value = "";
-
-      cargarVideos();
+    function setData(key, data) {
+      localStorage.setItem(key, JSON.stringify(data));
     }
 
-    function cargarVideos() {
-      const galeria = document.getElementById("galeria");
-      galeria.innerHTML = "";
-      const lista = JSON.parse(localStorage.getItem("videos")) || [];
-
-      lista.forEach((video) => {
-        const img = document.createElement("img");
-        img.src = video.imageUrl;
-        img.title = "Haz clic para abrir el video";
-        img.onclick = () => window.open(video.videoUrl, "_blank");
-
-        img.oncontextmenu = (e) => {
-          e.preventDefault();
-          mostrarMenuContextual(e.pageX, e.pageY, video.videoUrl);
-        };
-
-        galeria.appendChild(img);
+    function actualizarSelect(select, items) {
+      select.innerHTML = '';
+      items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item;
+        option.textContent = item;
+        select.appendChild(option);
       });
     }
 
-    function mostrarMenuContextual(x, y, videoUrl) {
-      const menu = document.getElementById("menuContextual");
-      menu.style.display = "block";
-      menu.style.left = `${x}px`;
-      menu.style.top = `${y}px`;
-
-      document.getElementById("abrirPestana").onclick = () => {
-        window.open(videoUrl, "_blank");
-        menu.style.display = "none";
-      };
-
-      document.getElementById("copiarEnlace").onclick = async () => {
-        await navigator.clipboard.writeText(videoUrl);
-        alert("¡Enlace copiado!");
-        menu.style.display = "none";
-      };
-
-      document.getElementById("instrucciones").onclick = () => {
-        alert("Para abrir el video en incógnito:\n1. Copia el enlace.\n2. Abre una ventana en modo incógnito.\n3. Pega el enlace allí.");
-        menu.style.display = "none";
-      };
+    function cargarDatosIniciales() {
+      actualizarSelect(actrizSelect, getData(actoresKey));
+      actualizarSelect(categoriaSelect, getData(categoriasKey));
+      actualizarSelect(carpetaSelect, getData(carpetasKey));
+      cargarVideos();
     }
 
-    // Ocultar menú al hacer clic fuera
-    window.addEventListener("click", () => {
-      document.getElementById("menuContextual").style.display = "none";
-    });
-  </script>
+    function guardarVideo() {
+      const videoUrl = document.getElementById('videoUrl').value;
+      const imageUrl = document.getElementById('imageUrl').value;
+      const nuevaActriz = document.getElementById('nuevaActriz').value;
+      const nuevaCategoria = document.getElementById('nuevaCategoria').value;
+      const nuevaCarpeta = document.getElementById('nuevaCarpeta').value;
 
+      let actrices = getData(actoresKey);
+      let categorias = getData(categoriasKey);
+      let carpetas = getData(carpetasKey);
+
+      if (nuevaActriz && !actrices.includes(nuevaActriz)) {
+        actrices.push(nuevaActriz);
+        setData(actoresKey, actrices);
+      }
+      if (nuevaCategoria && !categorias.includes(nuevaCategoria)) {
+        categorias.push(nuevaCategoria);
+        setData(categoriasKey, categorias);
+      }
+      if (nuevaCarpeta && !carpetas.includes(nuevaCarpeta)) {
+        carpetas.push(nuevaCarpeta);
+        setData(carpetasKey, carpetas);
+      }
+
+      const video = {
+        videoUrl,
+        imageUrl,
+        actriz: nuevaActriz || actrizSelect.value,
+        categoria: nuevaCategoria || categoriaSelect.value,
+        carpeta: nuevaCarpeta || carpetaSelect.value
+      };
+
+      let lista = getData(videosKey);
+      lista.push(video);
+      setData(videosKey, lista);
+
+      document.getElementById('videoUrl').value = '';
+      document.getElementById('imageUrl').value = '';
+      document.getElementById('nuevaActriz').value = '';
+      document.getElementById('nuevaCategoria').value = '';
+      document.getElementById('nuevaCarpeta').value = '';
+
+      cargarDatosIniciales();
+    }
+
+    function cargarVideos() {
+      const galeria = document.getElementById('galeria');
+      galeria.innerHTML = '';
+      const videos = getData(videosKey);
+
+      videos.forEach((video, index) => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+
+        const img = document.createElement('img');
+        img.src = video.imageUrl;
+        img.onclick = () => window.open(video.videoUrl, '_blank');
+
+        const desc = document.createElement('p');
+        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+
+        const del = document.createElement('button');
+        del.textContent = 'Eliminar';
+        del.onclick = () => {
+          const nuevaLista = videos.filter((_, i) => i !== index);
+          setData(videosKey, nuevaLista);
+          cargarVideos();
+        };
+
+        card.appendChild(img);
+        card.appendChild(desc);
+        card.appendChild(del);
+        galeria.appendChild(card);
+      });
+    }
+
+    cargarDatosIniciales();
+  </script>
 </body>
 </html>
