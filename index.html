@@ -59,6 +59,11 @@
     .video-card p {
       margin: 5px 0;
     }
+    .video-card .video-name {
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -66,6 +71,7 @@
   <div class="formulario">
     <input type="text" id="videoUrl" placeholder="Enlace del video">
     <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
+    <input type="text" id="videoNombre" placeholder="Nombre del video">
     <input type="text" id="nuevaActriz" placeholder="Agregar actriz">
     <select id="actrizSelect"></select>
     <input type="text" id="nuevaCategoria" placeholder="Agregar categoría">
@@ -115,6 +121,7 @@
     function guardarVideo() {
       const videoUrl = document.getElementById('videoUrl').value;
       const imageUrl = document.getElementById('imageUrl').value;
+      const videoNombre = document.getElementById('videoNombre').value;
       const nuevaActriz = document.getElementById('nuevaActriz').value;
       const nuevaCategoria = document.getElementById('nuevaCategoria').value;
       const nuevaCarpeta = document.getElementById('nuevaCarpeta').value;
@@ -139,6 +146,7 @@
       const video = {
         videoUrl,
         imageUrl,
+        videoNombre,
         actriz: nuevaActriz || actrizSelect.value,
         categoria: nuevaCategoria || categoriaSelect.value,
         carpeta: nuevaCarpeta || carpetaSelect.value
@@ -150,6 +158,7 @@
 
       document.getElementById('videoUrl').value = '';
       document.getElementById('imageUrl').value = '';
+      document.getElementById('videoNombre').value = '';
       document.getElementById('nuevaActriz').value = '';
       document.getElementById('nuevaCategoria').value = '';
       document.getElementById('nuevaCarpeta').value = '';
@@ -173,6 +182,10 @@
         const desc = document.createElement('p');
         desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
 
+        const nombre = document.createElement('div');
+        nombre.className = 'video-name';
+        nombre.textContent = video.videoNombre;
+
         const del = document.createElement('button');
         del.textContent = 'Eliminar';
         del.onclick = () => {
@@ -181,8 +194,55 @@
           cargarVideos();
         };
 
+        const menuContextual = (e) => {
+          e.preventDefault();
+          const menu = document.createElement('div');
+          menu.style.position = 'absolute';
+          menu.style.top = `${e.clientY}px`;
+          menu.style.left = `${e.clientX}px`;
+          menu.style.backgroundColor = '#444';
+          menu.style.padding = '10px';
+          menu.style.borderRadius = '5px';
+          menu.style.color = '#fff';
+          menu.style.zIndex = '9999';
+
+          const abrir = document.createElement('button');
+          abrir.textContent = 'Abrir en nueva pestaña';
+          abrir.onclick = () => window.open(video.videoUrl, '_blank');
+
+          const copiar = document.createElement('button');
+          copiar.textContent = 'Copiar enlace';
+          copiar.onclick = () => {
+            navigator.clipboard.writeText(video.videoUrl);
+            alert('Enlace copiado');
+          };
+
+          const eliminar = document.createElement('button');
+          eliminar.textContent = 'Eliminar';
+          eliminar.onclick = () => {
+            const nuevaLista = videos.filter((_, i) => i !== index);
+            setData(videosKey, nuevaLista);
+            cargarVideos();
+            document.body.removeChild(menu);
+          };
+
+          menu.appendChild(abrir);
+          menu.appendChild(copiar);
+          menu.appendChild(eliminar);
+          document.body.appendChild(menu);
+
+          document.addEventListener('click', () => {
+            if (document.body.contains(menu)) {
+              document.body.removeChild(menu);
+            }
+          });
+        };
+
+        img.addEventListener('contextmenu', menuContextual);
+
         card.appendChild(img);
         card.appendChild(desc);
+        card.appendChild(nombre);
         card.appendChild(del);
         galeria.appendChild(card);
       });
