@@ -140,7 +140,7 @@
 
     const galeria = document.getElementById('galeria');
     const buscador = document.getElementById('buscador');
-    
+
     function mostrarTab(id) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.getElementById(id).classList.add('active');
@@ -207,22 +207,13 @@
       cargarVideos(true);
     }
 
-    function cargarVideos(aleatorio = false, filtro = '') {
+    function cargarVideos(aleatorio = false) {
       const videos = getData(videosKey);
       const favoritos = getData(favoritosKey);
       let mostrar = videos;
 
-      if (aleatorio && filtro === '') {
-        mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
-      }
-
-      if (filtro !== '') {
-        const f = filtro.toLowerCase();
-        mostrar = videos.filter(video =>
-          video.videoNombre.toLowerCase().includes(f) ||
-          (video.actriz && video.actriz.toLowerCase().includes(f)) ||
-          (video.categoria && video.categoria.toLowerCase().includes(f))
-        );
+      if (aleatorio) {
+        mostrar = [...videos].sort(() => 0.5 - Math.random()).slice(0, 15);
       }
 
       galeria.innerHTML = '';
@@ -248,12 +239,19 @@
         star.style.cursor = 'pointer';
         star.onclick = () => toggleFavorito(video.videoUrl);
 
+        const copy = document.createElement('span');
+        copy.textContent = ' 📋';
+        copy.style.cursor = 'pointer';
+        copy.title = 'Copiar link';
+        copy.onclick = () => copiarLink(video.videoUrl);
+
         const trash = document.createElement('span');
         trash.textContent = ' 🗑️';
         trash.style.cursor = 'pointer';
         trash.onclick = () => eliminarVideo(video.videoUrl);
 
         controls.appendChild(star);
+        controls.appendChild(copy);
         controls.appendChild(trash);
 
         card.appendChild(img);
@@ -264,11 +262,6 @@
       });
 
       cargarFavoritos();
-    }
-
-    function filtrarVideos() {
-      const texto = buscador.value.trim();
-      cargarVideos(false, texto);
     }
 
     function cargarFavoritos() {
@@ -328,6 +321,67 @@
       setData(favoritosKey, favoritos);
 
       cargarVideos();
+    }
+
+    function copiarLink(link) {
+      navigator.clipboard.writeText(link).then(() => {
+        alert("Enlace copiado al portapapeles");
+      });
+    }
+
+    function filtrarVideos() {
+      const filtro = buscador.value.toLowerCase();
+      const videos = getData(videosKey);
+      const filtrados = videos.filter(v =>
+        v.videoNombre.toLowerCase().includes(filtro) ||
+        v.actriz.toLowerCase().includes(filtro) ||
+        v.categoria.toLowerCase().includes(filtro)
+      );
+
+      const favoritos = getData(favoritosKey);
+      galeria.innerHTML = '';
+      filtrados.forEach((video) => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+
+        const img = document.createElement('img');
+        img.src = video.imageUrl;
+        img.onclick = () => window.open(video.videoUrl, '_blank');
+
+        const nombre = document.createElement('div');
+        nombre.className = 'video-name';
+        nombre.textContent = video.videoNombre;
+
+        const desc = document.createElement('p');
+        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+
+        const controls = document.createElement('div');
+
+        const star = document.createElement('span');
+        star.textContent = favoritos.includes(video.videoUrl) ? '⭐' : '☆';
+        star.style.cursor = 'pointer';
+        star.onclick = () => toggleFavorito(video.videoUrl);
+
+        const copy = document.createElement('span');
+        copy.textContent = ' 📋';
+        copy.style.cursor = 'pointer';
+        copy.onclick = () => copiarLink(video.videoUrl);
+
+        const trash = document.createElement('span');
+        trash.textContent = ' 🗑️';
+        trash.style.cursor = 'pointer';
+        trash.onclick = () => eliminarVideo(video.videoUrl);
+
+        controls.appendChild(star);
+        controls.appendChild(copy);
+        controls.appendChild(trash);
+
+        card.appendChild(img);
+        card.appendChild(nombre);
+        card.appendChild(desc);
+        card.appendChild(controls);
+        galeria.appendChild(card);
+      });
     }
 
     function pedirContrasena() {
