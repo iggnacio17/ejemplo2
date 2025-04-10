@@ -68,6 +68,12 @@
 </head>
 <body>
   <h1>🎥 Gestor de Videos</h1>
+
+  <!-- Buscador -->
+  <div style="text-align: center; margin-bottom: 20px;">
+    <input type="text" id="buscador" placeholder="Buscar videos..." oninput="filtrarVideos()">
+  </div>
+
   <div class="formulario">
     <input type="text" id="videoUrl" placeholder="Enlace del video">
     <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
@@ -92,6 +98,7 @@
     const actrizSelect = document.getElementById('actrizSelect');
     const categoriaSelect = document.getElementById('categoriaSelect');
     const carpetaSelect = document.getElementById('carpetaSelect');
+    const buscador = document.getElementById('buscador');
 
     function getData(key) {
       return JSON.parse(localStorage.getItem(key)) || [];
@@ -186,6 +193,10 @@
         nombre.className = 'video-name';
         nombre.textContent = video.videoNombre;
 
+        const editar = document.createElement('button');
+        editar.textContent = 'Editar';
+        editar.onclick = () => editarVideo(video, index);
+
         const del = document.createElement('button');
         del.textContent = 'Eliminar';
         del.onclick = () => {
@@ -243,6 +254,68 @@
         card.appendChild(img);
         card.appendChild(desc);
         card.appendChild(nombre);
+        card.appendChild(editar);
+        card.appendChild(del);
+        galeria.appendChild(card);
+      });
+    }
+
+    function editarVideo(video, index) {
+      document.getElementById('videoUrl').value = video.videoUrl;
+      document.getElementById('imageUrl').value = video.imageUrl;
+      document.getElementById('videoNombre').value = video.videoNombre;
+      document.getElementById('nuevaActriz').value = video.actriz;
+      document.getElementById('nuevaCategoria').value = video.categoria;
+      document.getElementById('nuevaCarpeta').value = video.carpeta;
+
+      // Eliminar el video original y agregar el actualizado al guardar
+      const videos = getData(videosKey);
+      videos.splice(index, 1);
+      setData(videosKey, videos);
+    }
+
+    function filtrarVideos() {
+      const query = buscador.value.toLowerCase();
+      const videos = getData(videosKey);
+      const filtrados = videos.filter(video => 
+        video.videoNombre.toLowerCase().includes(query) || 
+        video.categoria.toLowerCase().includes(query) ||
+        video.carpeta.toLowerCase().includes(query)
+      );
+      
+      const galeria = document.getElementById('galeria');
+      galeria.innerHTML = '';
+      filtrados.forEach((video, index) => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+
+        const img = document.createElement('img');
+        img.src = video.imageUrl;
+        img.onclick = () => window.open(video.videoUrl, '_blank');
+
+        const desc = document.createElement('p');
+        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+
+        const nombre = document.createElement('div');
+        nombre.className = 'video-name';
+        nombre.textContent = video.videoNombre;
+
+        const editar = document.createElement('button');
+        editar.textContent = 'Editar';
+        editar.onclick = () => editarVideo(video, index);
+
+        const del = document.createElement('button');
+        del.textContent = 'Eliminar';
+        del.onclick = () => {
+          const nuevaLista = videos.filter((_, i) => i !== index);
+          setData(videosKey, nuevaLista);
+          cargarVideos();
+        };
+
+        card.appendChild(img);
+        card.appendChild(desc);
+        card.appendChild(nombre);
+        card.appendChild(editar);
         card.appendChild(del);
         galeria.appendChild(card);
       });
