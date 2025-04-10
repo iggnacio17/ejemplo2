@@ -4,57 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Galería de Videos</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5e0f7;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
-    h1 {
-      color: #333;
-    }
-    .login-container, .app-container {
-      max-width: 500px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      width: 90%;
-      font-size: 16px;
-    }
-    button {
-      background: #7b2cbf;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #5a189a;
-    }
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .gallery img {
-      width: 100%;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    .gallery img:hover {
-      transform: scale(1.05);
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -74,59 +24,12 @@
     <div class="gallery" id="galeria"></div>
   </div>
 
-  <script>
-    // Datos simulados de login
-    const USUARIO = "kitty";
-    const PASSWORD = "1234";
+  <!-- Menú contextual personalizado -->
+  <div id="menuContextual" class="context-menu">
+    <button onclick="abrirVideoEnNuevoTab()">Abrir en pestaña normal</button>
+    <button onclick="copiarYMostrar()">Copiar enlace para modo incógnito</button>
+  </div>
 
-    function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-
-      if (user === USUARIO && pass === PASSWORD) {
-        document.getElementById("loginContainer").style.display = "none";
-        document.getElementById("appContainer").style.display = "block";
-        cargarVideos();
-      } else {
-        alert("Usuario o contraseña incorrectos");
-      }
-    }
-
-    function guardarVideo() {
-      const videoUrl = document.getElementById("videoUrl").value;
-      const imageUrl = document.getElementById("imageUrl").value;
-
-      if (!videoUrl || !imageUrl) {
-        alert("Faltan campos");
-        return;
-      }
-
-      const video = { videoUrl, imageUrl };
-      let lista = JSON.parse(localStorage.getItem("videos")) || [];
-      lista.push(video);
-      localStorage.setItem("videos", JSON.stringify(lista));
-
-      document.getElementById("videoUrl").value = "";
-      document.getElementById("imageUrl").value = "";
-
-      cargarVideos();
-    }
-
-    function cargarVideos() {
-      const galeria = document.getElementById("galeria");
-      galeria.innerHTML = "";
-      const lista = JSON.parse(localStorage.getItem("videos")) || [];
-
-      lista.forEach(video => {
-        const img = document.createElement("img");
-        img.src = video.imageUrl;
-        img.title = "Ver video";
-        img.onclick = () => {
-          window.open(video.videoUrl, "_blank");
-        };
-        galeria.appendChild(img);
-      });
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
