@@ -94,6 +94,28 @@
       max-width: 400px;
       margin-bottom: 10px;
     }
+    #menuContextual {
+      position: absolute;
+      background: #2c2c2c;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 6px;
+      display: none;
+      z-index: 1000;
+      padding: 5px;
+      width: 180px;
+    }
+    #menuContextual div {
+      padding: 8px;
+      cursor: pointer;
+      border-bottom: 1px solid #444;
+    }
+    #menuContextual div:hover {
+      background-color: #444;
+    }
+    #menuContextual div:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 <body>
@@ -134,12 +156,42 @@
     <div class="galeria" id="galeriaFavoritos"></div>
   </div>
 
+  <div id="menuContextual"></div>
+
   <script>
     const PASSWORD = "finnCracK12@";
     const videosKey = 'videos', actoresKey = 'actrices', categoriasKey = 'categorias', carpetasKey = 'carpetas', favoritosKey = 'favoritos';
-
     const galeria = document.getElementById('galeria');
     const buscador = document.getElementById('buscador');
+
+    let linkSeleccionado = '';
+
+    document.addEventListener('click', () => {
+      document.getElementById('menuContextual').style.display = 'none';
+    });
+
+    function copiarAlPortapapeles(texto) {
+      navigator.clipboard.writeText(texto).then(() => {
+        alert("\u00a1Enlace copiado!");
+      }, () => {
+        alert("Error al copiar");
+      });
+    }
+
+    function mostrarMenuContextual(event, videoUrl) {
+      event.preventDefault();
+      linkSeleccionado = videoUrl;
+
+      const menu = document.getElementById('menuContextual');
+      menu.innerHTML = `
+        <div onclick="copiarAlPortapapeles('${videoUrl}')">🔗 Copiar enlace</div>
+        <div onclick="window.open('${videoUrl}', '_blank')">🚀 Abrir en nueva pestaña</div>
+        <div onclick="copiarAlPortapapeles('${videoUrl}'); alert('Pega este enlace en una pestaña de incógnito')">🕵️ Abrir en incógnito</div>
+      `;
+      menu.style.top = event.pageY + 'px';
+      menu.style.left = event.pageX + 'px';
+      menu.style.display = 'block';
+    }
 
     function mostrarTab(id) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -213,7 +265,7 @@
       let mostrar = videos;
 
       if (aleatorio) {
-        mostrar = [...videos].sort(() => 0.5 - Math.random()).slice(0, 15);
+        mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
       }
 
       galeria.innerHTML = '';
@@ -224,6 +276,7 @@
         const img = document.createElement('img');
         img.src = video.imageUrl;
         img.onclick = () => window.open(video.videoUrl, '_blank');
+        img.oncontextmenu = (e) => mostrarMenuContextual(e, video.videoUrl);
 
         const nombre = document.createElement('div');
         nombre.className = 'video-name';
@@ -239,19 +292,12 @@
         star.style.cursor = 'pointer';
         star.onclick = () => toggleFavorito(video.videoUrl);
 
-        const copy = document.createElement('span');
-        copy.textContent = ' 📋';
-        copy.style.cursor = 'pointer';
-        copy.title = 'Copiar link';
-        copy.onclick = () => copiarLink(video.videoUrl);
-
         const trash = document.createElement('span');
         trash.textContent = ' 🗑️';
         trash.style.cursor = 'pointer';
         trash.onclick = () => eliminarVideo(video.videoUrl);
 
         controls.appendChild(star);
-        controls.appendChild(copy);
         controls.appendChild(trash);
 
         card.appendChild(img);
@@ -277,6 +323,7 @@
         const img = document.createElement('img');
         img.src = video.imageUrl;
         img.onclick = () => window.open(video.videoUrl, '_blank');
+        img.oncontextmenu = (e) => mostrarMenuContextual(e, video.videoUrl);
 
         const nombre = document.createElement('div');
         nombre.className = 'video-name';
@@ -306,7 +353,7 @@
         favoritos.push(videoUrl);
       }
       setData(favoritosKey, favoritos);
-      cargarVideos(); // refresca
+      cargarVideos();
     }
 
     function eliminarVideo(videoUrl) {
@@ -323,30 +370,31 @@
       cargarVideos();
     }
 
-    function copiarLink(link) {
-      navigator.clipboard.writeText(link).then(() => {
-        alert("Enlace copiado al portapapeles");
-      });
+    function pedirContrasena() {
+      const input = prompt("Introduce la contraseña:");
+      if (input !== PASSWORD) {
+        alert("Contraseña incorrecta. Acceso denegado.");
+        document.body.innerHTML = "<h1 style='color: red; text-align:center;'>Acceso Denegado</h1>";
+      } else {
+        cargarDatos();
+      }
     }
 
     function filtrarVideos() {
       const filtro = buscador.value.toLowerCase();
-      const videos = getData(videosKey);
-      const filtrados = videos.filter(v =>
+      const videos = getData(videosKey).filter(v =>
         v.videoNombre.toLowerCase().includes(filtro) ||
-        v.actriz.toLowerCase().includes(filtro) ||
         v.categoria.toLowerCase().includes(filtro)
       );
-
-      const favoritos = getData(favoritosKey);
       galeria.innerHTML = '';
-      filtrados.forEach((video) => {
+      videos.forEach(video => {
         const card = document.createElement('div');
         card.className = 'video-card';
 
         const img = document.createElement('img');
         img.src = video.imageUrl;
         img.onclick = () => window.open(video.videoUrl, '_blank');
+        img.oncontextmenu = (e) => mostrarMenuContextual(e, video.videoUrl);
 
         const nombre = document.createElement('div');
         nombre.className = 'video-name';
@@ -358,14 +406,9 @@
         const controls = document.createElement('div');
 
         const star = document.createElement('span');
-        star.textContent = favoritos.includes(video.videoUrl) ? '⭐' : '☆';
+        star.textContent = '☆';
         star.style.cursor = 'pointer';
         star.onclick = () => toggleFavorito(video.videoUrl);
-
-        const copy = document.createElement('span');
-        copy.textContent = ' 📋';
-        copy.style.cursor = 'pointer';
-        copy.onclick = () => copiarLink(video.videoUrl);
 
         const trash = document.createElement('span');
         trash.textContent = ' 🗑️';
@@ -373,7 +416,6 @@
         trash.onclick = () => eliminarVideo(video.videoUrl);
 
         controls.appendChild(star);
-        controls.appendChild(copy);
         controls.appendChild(trash);
 
         card.appendChild(img);
@@ -382,16 +424,6 @@
         card.appendChild(controls);
         galeria.appendChild(card);
       });
-    }
-
-    function pedirContrasena() {
-      const input = prompt("Introduce la contraseña:");
-      if (input !== PASSWORD) {
-        alert("Contraseña incorrecta. Acceso denegado.");
-        document.body.innerHTML = "<h1 style='color: red; text-align:center;'>Acceso Denegado</h1>";
-      } else {
-        cargarDatos();
-      }
     }
 
     pedirContrasena();
