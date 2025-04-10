@@ -1,113 +1,145 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestor de Videos</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎥 Gestor de Videos</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #1e1e1e;
       color: #ffffff;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+    }
+    header {
+      padding: 10px;
+      text-align: center;
+      background: #2c2c2c;
     }
     h1 {
-      color: #ffffff;
-      text-align: center;
+      margin: 0;
     }
-    .formulario, .galeria {
-      max-width: 800px;
-      margin: auto;
-      padding: 10px;
-      background: #2c2c2c;
-      border-radius: 10px;
-      margin-bottom: 20px;
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
     }
-    input, select, button {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 5px;
-      border: none;
-    }
-    input, select {
-      width: 200px;
-    }
-    button {
+    nav button {
+      padding: 10px 15px;
       background-color: #4CAF50;
+      border: none;
+      border-radius: 5px;
       color: white;
       cursor: pointer;
     }
-    button:hover {
+    nav button:hover {
       background-color: #45a049;
+    }
+    .tab {
+      display: none;
+      max-width: 800px;
+      margin: auto;
+      padding: 10px;
+    }
+    .tab.active {
+      display: block;
+    }
+    input, select, button {
+      padding: 5px;
+      margin: 4px;
+      border-radius: 4px;
+      border: none;
+    }
+    input, select {
+      width: 180px;
+    }
+    .formulario {
+      background: #2c2c2c;
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .galeria {
+      background: #2c2c2c;
+      padding: 15px;
+      border-radius: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
     }
     .video-card {
       background: #3a3a3a;
-      padding: 10px;
-      border-radius: 10px;
-      margin: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      padding: 5px;
+      border-radius: 8px;
+      text-align: center;
     }
     .video-card img {
       width: 100%;
-      max-width: 300px;
-      border-radius: 10px;
+      max-width: 160px;
+      border-radius: 8px;
       cursor: pointer;
     }
     .video-card p {
-      margin: 5px 0;
+      font-size: 12px;
+      margin: 4px 0;
     }
-    .video-card .video-name {
+    .video-name {
       font-weight: bold;
-      margin-top: 10px;
-      text-align: center;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+    #buscador {
+      width: 60%;
+      max-width: 400px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>🎥 Gestor de Videos</h1>
 
-  <!-- Navegación entre pestañas -->
-  <div style="text-align:center; margin-bottom: 20px;">
-    <button onclick="mostrarSeccion('galeria')">🎞️ Galería</button>
-    <button onclick="mostrarSeccion('formulario')">➕ Nuevo Video</button>
+  <header>
+    <h1>🎥 Gestor de Videos</h1>
+    <nav>
+      <button onclick="mostrarTab('galeriaTab')">Galería</button>
+      <button onclick="mostrarTab('formularioTab')">Nuevo Video</button>
+    </nav>
+  </header>
+
+  <div class="tab active" id="galeriaTab">
+    <div style="text-align: center; margin: 10px 0;">
+      <input type="text" id="buscador" placeholder="Buscar por nombre o categoría">
+      <button onclick="filtrarVideos()">Buscar</button>
+    </div>
+    <div class="galeria" id="galeria"></div>
   </div>
 
-  <!-- Buscador -->
-  <div id="buscadorContainer" style="text-align: center; margin-bottom: 20px; display: none;">
-    <input type="text" id="buscador" placeholder="Buscar por nombre, categoría o carpeta...">
-    <button onclick="filtrarVideos()">Buscar</button>
+  <div class="tab" id="formularioTab">
+    <div class="formulario">
+      <input type="text" id="videoUrl" placeholder="Enlace del video"><br>
+      <input type="text" id="imageUrl" placeholder="Enlace de la imagen"><br>
+      <input type="text" id="videoNombre" placeholder="Nombre del video"><br>
+      <input type="text" id="nuevaActriz" placeholder="Agregar actriz">
+      <select id="actrizSelect"></select><br>
+      <input type="text" id="nuevaCategoria" placeholder="Agregar categoría">
+      <select id="categoriaSelect"></select><br>
+      <input type="text" id="nuevaCarpeta" placeholder="Nueva carpeta">
+      <select id="carpetaSelect"></select><br>
+      <button onclick="guardarVideo()">Guardar Video</button>
+    </div>
   </div>
-
-  <!-- Formulario -->
-  <div class="formulario" id="formulario" style="display: none;">
-    <input type="text" id="videoUrl" placeholder="Enlace del video">
-    <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
-    <input type="text" id="videoNombre" placeholder="Nombre del video">
-    <input type="text" id="nuevaActriz" placeholder="Agregar actriz">
-    <select id="actrizSelect"></select>
-    <input type="text" id="nuevaCategoria" placeholder="Agregar categoría">
-    <select id="categoriaSelect"></select>
-    <select id="carpetaSelect"></select>
-    <input type="text" id="nuevaCarpeta" placeholder="Nueva carpeta">
-    <button onclick="guardarVideo()">Guardar Video</button>
-  </div>
-
-  <!-- Galería -->
-  <div class="galeria" id="galeria" style="display: none;"></div>
 
   <script>
-    const actoresKey = 'actrices';
-    const categoriasKey = 'categorias';
-    const carpetasKey = 'carpetas';
-    const videosKey = 'videos';
+    const PASSWORD = "finnCracK12@";
+    const videosKey = 'videos', actoresKey = 'actrices', categoriasKey = 'categorias', carpetasKey = 'carpetas';
 
-    const actrizSelect = document.getElementById('actrizSelect');
-    const categoriaSelect = document.getElementById('categoriaSelect');
-    const carpetaSelect = document.getElementById('carpetaSelect');
+    const galeria = document.getElementById('galeria');
     const buscador = document.getElementById('buscador');
+
+    function mostrarTab(id) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
 
     function getData(key) {
       return JSON.parse(localStorage.getItem(key)) || [];
@@ -117,9 +149,9 @@
       localStorage.setItem(key, JSON.stringify(data));
     }
 
-    function actualizarSelect(select, items) {
+    function actualizarSelect(select, data) {
       select.innerHTML = '';
-      items.forEach(item => {
+      data.forEach(item => {
         const option = document.createElement('option');
         option.value = item;
         option.textContent = item;
@@ -127,208 +159,123 @@
       });
     }
 
-    function cargarDatosIniciales() {
-      actualizarSelect(actrizSelect, getData(actoresKey));
-      actualizarSelect(categoriaSelect, getData(categoriasKey));
-      actualizarSelect(carpetaSelect, getData(carpetasKey));
-      cargarVideos();
-    }
-
-    function mostrarSeccion(seccion) {
-      const galeria = document.getElementById('galeria');
-      const formulario = document.getElementById('formulario');
-      const buscadorContainer = document.getElementById('buscadorContainer');
-
-      if (seccion === 'galeria') {
-        galeria.style.display = 'block';
-        formulario.style.display = 'none';
-        buscadorContainer.style.display = 'block';
-        cargarVideos();
-      } else {
-        galeria.style.display = 'none';
-        formulario.style.display = 'block';
-        buscadorContainer.style.display = 'none';
-      }
-    }
-
     function guardarVideo() {
-      const videoUrl = document.getElementById('videoUrl').value;
-      const imageUrl = document.getElementById('imageUrl').value;
-      const videoNombre = document.getElementById('videoNombre').value;
-      const nuevaActriz = document.getElementById('nuevaActriz').value;
-      const nuevaCategoria = document.getElementById('nuevaCategoria').value;
-      const nuevaCarpeta = document.getElementById('nuevaCarpeta').value;
+      const video = {
+        videoUrl: document.getElementById('videoUrl').value,
+        imageUrl: document.getElementById('imageUrl').value,
+        videoNombre: document.getElementById('videoNombre').value,
+        actriz: document.getElementById('nuevaActriz').value || document.getElementById('actrizSelect').value,
+        categoria: document.getElementById('nuevaCategoria').value || document.getElementById('categoriaSelect').value,
+        carpeta: document.getElementById('nuevaCarpeta').value || document.getElementById('carpetaSelect').value
+      };
 
-      let actrices = getData(actoresKey);
-      let categorias = getData(categoriasKey);
-      let carpetas = getData(carpetasKey);
+      const actrices = getData(actoresKey);
+      const categorias = getData(categoriasKey);
+      const carpetas = getData(carpetasKey);
 
-      if (nuevaActriz && !actrices.includes(nuevaActriz)) {
-        actrices.push(nuevaActriz);
+      if (video.actriz && !actrices.includes(video.actriz)) {
+        actrices.push(video.actriz);
         setData(actoresKey, actrices);
       }
-      if (nuevaCategoria && !categorias.includes(nuevaCategoria)) {
-        categorias.push(nuevaCategoria);
+      if (video.categoria && !categorias.includes(video.categoria)) {
+        categorias.push(video.categoria);
         setData(categoriasKey, categorias);
       }
-      if (nuevaCarpeta && !carpetas.includes(nuevaCarpeta)) {
-        carpetas.push(nuevaCarpeta);
+      if (video.carpeta && !carpetas.includes(video.carpeta)) {
+        carpetas.push(video.carpeta);
         setData(carpetasKey, carpetas);
       }
 
-      const video = {
-        videoUrl,
-        imageUrl,
-        videoNombre,
-        actriz: nuevaActriz || actrizSelect.value,
-        categoria: nuevaCategoria || categoriaSelect.value,
-        carpeta: nuevaCarpeta || carpetaSelect.value
-      };
-
-      let lista = getData(videosKey);
+      const lista = getData(videosKey);
       lista.push(video);
       setData(videosKey, lista);
 
-      document.getElementById('videoUrl').value = '';
-      document.getElementById('imageUrl').value = '';
-      document.getElementById('videoNombre').value = '';
-      document.getElementById('nuevaActriz').value = '';
-      document.getElementById('nuevaCategoria').value = '';
-      document.getElementById('nuevaCarpeta').value = '';
-
-      cargarDatosIniciales();
+      document.querySelectorAll('.formulario input').forEach(input => input.value = '');
+      cargarDatos();
+      mostrarTab('galeriaTab');
     }
 
-    function cargarVideos() {
-      const galeria = document.getElementById('galeria');
-      galeria.innerHTML = '';
-      const videos = getData(videosKey);
+    function cargarDatos() {
+      actualizarSelect(document.getElementById('actrizSelect'), getData(actoresKey));
+      actualizarSelect(document.getElementById('categoriaSelect'), getData(categoriasKey));
+      actualizarSelect(document.getElementById('carpetaSelect'), getData(carpetasKey));
+      cargarVideos(true);
+    }
 
-      videos.forEach((video, index) => {
-        const card = crearCard(video, index);
+    function cargarVideos(aleatorio = false) {
+      const videos = getData(videosKey);
+      let mostrar = videos;
+
+      if (aleatorio) {
+        mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
+      }
+
+      galeria.innerHTML = '';
+      mostrar.forEach((video, index) => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+
+        const img = document.createElement('img');
+        img.src = video.imageUrl;
+        img.onclick = () => window.open(video.videoUrl, '_blank');
+
+        const nombre = document.createElement('div');
+        nombre.className = 'video-name';
+        nombre.textContent = video.videoNombre;
+
+        const desc = document.createElement('p');
+        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+
+        card.appendChild(img);
+        card.appendChild(nombre);
+        card.appendChild(desc);
         galeria.appendChild(card);
       });
-    }
-
-    function crearCard(video, index) {
-      const card = document.createElement('div');
-      card.className = 'video-card';
-
-      const img = document.createElement('img');
-      img.src = video.imageUrl;
-      img.onclick = () => window.open(video.videoUrl, '_blank');
-
-      const desc = document.createElement('p');
-      desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
-
-      const nombre = document.createElement('div');
-      nombre.className = 'video-name';
-      nombre.textContent = video.videoNombre;
-
-      const editar = document.createElement('button');
-      editar.textContent = 'Editar';
-      editar.onclick = () => editarVideo(video, index);
-
-      const del = document.createElement('button');
-      del.textContent = 'Eliminar';
-      del.onclick = () => {
-        const videos = getData(videosKey);
-        const nuevaLista = videos.filter((_, i) => i !== index);
-        setData(videosKey, nuevaLista);
-        cargarVideos();
-      };
-
-      const menuContextual = (e) => {
-        e.preventDefault();
-        const menu = document.createElement('div');
-        menu.style.position = 'absolute';
-        menu.style.top = `${e.clientY}px`;
-        menu.style.left = `${e.clientX}px`;
-        menu.style.backgroundColor = '#444';
-        menu.style.padding = '10px';
-        menu.style.borderRadius = '5px';
-        menu.style.color = '#fff';
-        menu.style.zIndex = '9999';
-
-        const abrir = document.createElement('button');
-        abrir.textContent = 'Abrir en nueva pestaña';
-        abrir.onclick = () => window.open(video.videoUrl, '_blank');
-
-        const copiar = document.createElement('button');
-        copiar.textContent = 'Copiar enlace';
-        copiar.onclick = () => {
-          navigator.clipboard.writeText(video.videoUrl);
-          alert('Enlace copiado');
-        };
-
-        const eliminar = document.createElement('button');
-        eliminar.textContent = 'Eliminar';
-        eliminar.onclick = () => {
-          const videos = getData(videosKey);
-          const nuevaLista = videos.filter((_, i) => i !== index);
-          setData(videosKey, nuevaLista);
-          cargarVideos();
-          document.body.removeChild(menu);
-        };
-
-        menu.appendChild(abrir);
-        menu.appendChild(copiar);
-        menu.appendChild(eliminar);
-        document.body.appendChild(menu);
-
-        document.addEventListener('click', () => {
-          if (document.body.contains(menu)) {
-            document.body.removeChild(menu);
-          }
-        });
-      };
-
-      img.addEventListener('contextmenu', menuContextual);
-
-      card.appendChild(img);
-      card.appendChild(desc);
-      card.appendChild(nombre);
-      card.appendChild(editar);
-      card.appendChild(del);
-
-      return card;
-    }
-
-    function editarVideo(video, index) {
-      document.getElementById('videoUrl').value = video.videoUrl;
-      document.getElementById('imageUrl').value = video.imageUrl;
-      document.getElementById('videoNombre').value = video.videoNombre;
-      document.getElementById('nuevaActriz').value = video.actriz;
-      document.getElementById('nuevaCategoria').value = video.categoria;
-      document.getElementById('nuevaCarpeta').value = video.carpeta;
-
-      const videos = getData(videosKey);
-      videos.splice(index, 1);
-      setData(videosKey, videos);
-
-      mostrarSeccion('formulario');
     }
 
     function filtrarVideos() {
       const query = buscador.value.toLowerCase();
       const videos = getData(videosKey);
-      const filtrados = videos.filter(video =>
-        video.videoNombre.toLowerCase().includes(query) ||
-        video.categoria.toLowerCase().includes(query) ||
-        video.carpeta.toLowerCase().includes(query)
+      const filtrados = videos.filter(v =>
+        v.videoNombre.toLowerCase().includes(query) ||
+        v.categoria.toLowerCase().includes(query) ||
+        v.carpeta.toLowerCase().includes(query)
       );
 
-      const galeria = document.getElementById('galeria');
       galeria.innerHTML = '';
-      filtrados.forEach((video, index) => {
-        const card = crearCard(video, index);
+      filtrados.forEach(video => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+
+        const img = document.createElement('img');
+        img.src = video.imageUrl;
+        img.onclick = () => window.open(video.videoUrl, '_blank');
+
+        const nombre = document.createElement('div');
+        nombre.className = 'video-name';
+        nombre.textContent = video.videoNombre;
+
+        const desc = document.createElement('p');
+        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+
+        card.appendChild(img);
+        card.appendChild(nombre);
+        card.appendChild(desc);
         galeria.appendChild(card);
       });
     }
 
-    // Inicialización
-    cargarDatosIniciales();
-    mostrarSeccion('galeria');
+    function pedirContrasena() {
+      const input = prompt("Introduce la contraseña:");
+      if (input !== PASSWORD) {
+        alert("Contraseña incorrecta. Acceso denegado.");
+        document.body.innerHTML = "<h1 style='color: red; text-align:center;'>Acceso Denegado</h1>";
+      } else {
+        cargarDatos();
+      }
+    }
+
+    pedirContrasena();
   </script>
 </body>
 </html>
