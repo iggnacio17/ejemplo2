@@ -1,16 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ranapedia</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi App Web - Cámara</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #d8b1da;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #video, #foto {
+      width: 100%;
+      max-width: 400px;
+      margin-top: 20px;
+      border-radius: 15px;
+    }
+    #mensaje {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
 </head>
 <body>
-    <h1 id="rojo">poo</h1>
-    <img src="https://i.makeagif.com/media/4-29-2018/1P7jor.gif" alt="">
-    <img src="Assets/Felipe-Avello-jpg.webp" alt="">
-    <a href="https://www.youtube.com/watch?v=DLGLGXMOvQM&ab_channel=Bigmanu424" target="_blank" rel="noopener">Haz clic aquí</a>
-    <button>Soy un boton aleman</button>
+
+  <h1>¡Hola Kitty!</h1>
+  <button onclick="iniciarCamara()">Activar Cámara</button>
+  <button onclick="tomarFoto()">Tomar Foto</button>
+  <div id="mensaje"></div>
+
+  <video id="video" autoplay></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <img id="foto" alt="Tu foto aparecerá aquí">
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const foto = document.getElementById('foto');
+    const mensaje = document.getElementById('mensaje');
+
+    async function iniciarCamara() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        mensaje.innerText = "¡Cámara activada!";
+      } catch (error) {
+        mensaje.innerText = "No se pudo acceder a la cámara 😢";
+        console.error(error);
+      }
+    }
+
+    function tomarFoto() {
+      const contexto = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imagenData = canvas.toDataURL('image/png');
+      foto.src = imagenData;
+      mensaje.innerText = "📸 ¡Foto tomada!";
+    }
+  </script>
+
 </body>
 </html>
