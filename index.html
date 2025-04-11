@@ -1,3 +1,4 @@
+<!-- Usa este código HTML completo -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -16,9 +17,6 @@
       padding: 10px;
       text-align: center;
       background: #2c2c2c;
-    }
-    h1 {
-      margin: 0;
     }
     nav {
       display: flex;
@@ -65,7 +63,7 @@
       padding: 15px;
       border-radius: 10px;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 10px;
     }
     .video-card {
@@ -94,6 +92,10 @@
       max-width: 400px;
       margin-bottom: 10px;
     }
+    .acciones span {
+      margin: 0 3px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -109,8 +111,7 @@
 
   <div class="tab active" id="galeriaTab">
     <div style="text-align: center; margin: 10px 0;">
-      <input type="text" id="buscador" placeholder="Buscar por nombre o categoría" onkeyup="filtrarVideos()">
-      <button onclick="filtrarVideos()">Buscar</button>
+      <input type="text" id="buscador" placeholder="Buscar por nombre o categoría" oninput="filtrarVideos()">
     </div>
     <div class="galeria" id="galeria"></div>
   </div>
@@ -140,10 +141,11 @@
 
     const galeria = document.getElementById('galeria');
     const buscador = document.getElementById('buscador');
-    
+
     function mostrarTab(id) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.getElementById(id).classList.add('active');
+      if (id === "galeriaTab") cargarVideos(true);
     }
 
     function getData(key) {
@@ -173,6 +175,8 @@
         categoria: document.getElementById('nuevaCategoria').value || document.getElementById('categoriaSelect').value,
         carpeta: document.getElementById('nuevaCarpeta').value || document.getElementById('carpetaSelect').value
       };
+
+      if (!video.videoUrl || !video.imageUrl || !video.videoNombre) return alert("Todos los campos son obligatorios");
 
       const actrices = getData(actoresKey);
       const categorias = getData(categoriasKey);
@@ -207,54 +211,74 @@
       cargarVideos(true);
     }
 
+    function crearCard(video, favoritos) {
+      const card = document.createElement('div');
+      card.className = 'video-card';
+
+      const img = document.createElement('img');
+      img.src = video.imageUrl;
+      img.onclick = () => window.open(video.videoUrl, '_blank');
+
+      const nombre = document.createElement('div');
+      nombre.className = 'video-name';
+      nombre.textContent = video.videoNombre;
+
+      const desc = document.createElement('p');
+      desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+
+      const acciones = document.createElement('div');
+      acciones.className = 'acciones';
+
+      const star = document.createElement('span');
+      star.textContent = favoritos.includes(video.videoUrl) ? '⭐' : '☆';
+      star.onclick = () => toggleFavorito(video.videoUrl);
+
+      const copy = document.createElement('span');
+      copy.textContent = '📋';
+      copy.title = 'Copiar enlace';
+      copy.onclick = () => copiarEnlace(video.videoUrl);
+
+      const trash = document.createElement('span');
+      trash.textContent = '🗑️';
+      trash.onclick = () => eliminarVideo(video.videoUrl);
+
+      acciones.append(star, copy, trash);
+      card.append(img, nombre, desc, acciones);
+      return card;
+    }
+
     function cargarVideos(aleatorio = false) {
       const videos = getData(videosKey);
       const favoritos = getData(favoritosKey);
-      let mostrar = videos;
+      let mostrar = buscador.value.trim() === "" && aleatorio
+        ? videos.sort(() => 0.5 - Math.random()).slice(0, 15)
+        : videos;
+      galeria.innerHTML = '';
+      mostrar.forEach(video => {
+        galeria.appendChild(crearCard(video, favoritos));
+      });
+      cargarFavoritos();
+    }
 
-      if (aleatorio) {
-        mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
+    function filtrarVideos() {
+      const query = buscador.value.toLowerCase();
+      const videos = getData(videosKey);
+      const favoritos = getData(favoritosKey);
+
+      if (query === "") {
+        cargarVideos(true);
+        return;
       }
 
+      const filtrados = videos.filter(v =>
+        v.videoNombre.toLowerCase().includes(query) ||
+        v.categoria.toLowerCase().includes(query)
+      );
+
       galeria.innerHTML = '';
-      mostrar.forEach((video) => {
-        const card = document.createElement('div');
-        card.className = 'video-card';
-
-        const img = document.createElement('img');
-        img.src = video.imageUrl;
-        img.onclick = () => window.open(video.videoUrl, '_blank');
-
-        const nombre = document.createElement('div');
-        nombre.className = 'video-name';
-        nombre.textContent = video.videoNombre;
-
-        const desc = document.createElement('p');
-        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
-
-        const controls = document.createElement('div');
-
-        const star = document.createElement('span');
-        star.textContent = favoritos.includes(video.videoUrl) ? '⭐' : '☆';
-        star.style.cursor = 'pointer';
-        star.onclick = () => toggleFavorito(video.videoUrl);
-
-        const trash = document.createElement('span');
-        trash.textContent = ' 🗑️';
-        trash.style.cursor = 'pointer';
-        trash.onclick = () => eliminarVideo(video.videoUrl);
-
-        controls.appendChild(star);
-        controls.appendChild(trash);
-
-        card.appendChild(img);
-        card.appendChild(nombre);
-        card.appendChild(desc);
-        card.appendChild(controls);
-        galeria.appendChild(card);
+      filtrados.forEach(video => {
+        galeria.appendChild(crearCard(video, favoritos));
       });
-
-      cargarFavoritos();
     }
 
     function cargarFavoritos() {
@@ -262,32 +286,8 @@
       const videos = getData(videosKey).filter(v => favoritos.includes(v.videoUrl));
       const contenedor = document.getElementById('galeriaFavoritos');
       contenedor.innerHTML = '';
-
       videos.forEach(video => {
-        const card = document.createElement('div');
-        card.className = 'video-card';
-
-        const img = document.createElement('img');
-        img.src = video.imageUrl;
-        img.onclick = () => window.open(video.videoUrl, '_blank');
-
-        const nombre = document.createElement('div');
-        nombre.className = 'video-name';
-        nombre.textContent = video.videoNombre;
-
-        const desc = document.createElement('p');
-        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
-
-        const star = document.createElement('span');
-        star.textContent = '⭐';
-        star.style.cursor = 'pointer';
-        star.onclick = () => toggleFavorito(video.videoUrl);
-
-        card.appendChild(img);
-        card.appendChild(nombre);
-        card.appendChild(desc);
-        card.appendChild(star);
-        contenedor.appendChild(card);
+        contenedor.appendChild(crearCard(video, favoritos));
       });
     }
 
@@ -299,68 +299,25 @@
         favoritos.push(videoUrl);
       }
       setData(favoritosKey, favoritos);
-      cargarVideos(); // refresca
+      cargarVideos(false);
     }
 
     function eliminarVideo(videoUrl) {
       if (!confirm("¿Estás seguro de eliminar este video?")) return;
-
       let lista = getData(videosKey);
       lista = lista.filter(video => video.videoUrl !== videoUrl);
       setData(videosKey, lista);
-
       let favoritos = getData(favoritosKey);
       favoritos = favoritos.filter(url => url !== videoUrl);
       setData(favoritosKey, favoritos);
-
-      cargarVideos();
+      cargarVideos(false);
     }
 
-    function filtrarVideos() {
-      const query = buscador.value.toLowerCase();
-      const videos = getData(videosKey);
-
-      const resultados = videos.filter(video => 
-        video.videoNombre.toLowerCase().includes(query) || 
-        video.categoria.toLowerCase().includes(query)
-      );
-
-      galeria.innerHTML = '';
-      resultados.forEach((video) => {
-        const card = document.createElement('div');
-        card.className = 'video-card';
-
-        const img = document.createElement('img');
-        img.src = video.imageUrl;
-        img.onclick = () => window.open(video.videoUrl, '_blank');
-
-        const nombre = document.createElement('div');
-        nombre.className = 'video-name';
-        nombre.textContent = video.videoNombre;
-
-        const desc = document.createElement('p');
-        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
-
-        const controls = document.createElement('div');
-
-        const star = document.createElement('span');
-        star.textContent = favoritos.includes(video.videoUrl) ? '⭐' : '☆';
-        star.style.cursor = 'pointer';
-        star.onclick = () => toggleFavorito(video.videoUrl);
-
-        const trash = document.createElement('span');
-        trash.textContent = ' 🗑️';
-        trash.style.cursor = 'pointer';
-        trash.onclick = () => eliminarVideo(video.videoUrl);
-
-        controls.appendChild(star);
-        controls.appendChild(trash);
-
-        card.appendChild(img);
-        card.appendChild(nombre);
-        card.appendChild(desc);
-        card.appendChild(controls);
-        galeria.appendChild(card);
+    function copiarEnlace(videoUrl) {
+      navigator.clipboard.writeText(videoUrl).then(() => {
+        alert("Enlace copiado al portapapeles");
+      }).catch(err => {
+        console.error("Error al copiar:", err);
       });
     }
 
