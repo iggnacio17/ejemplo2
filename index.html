@@ -94,38 +94,19 @@
       max-width: 400px;
       margin-bottom: 10px;
     }
-    #menuContextual {
-      position: absolute;
-      background: #2c2c2c;
-      color: white;
-      border: 1px solid #555;
-      border-radius: 6px;
-      display: none;
-      z-index: 1000;
-      padding: 5px;
-      width: 180px;
-    }
-    #menuContextual div {
-      padding: 8px;
+    .favorito {
       cursor: pointer;
-      border-bottom: 1px solid #444;
-    }
-    #menuContextual div:hover {
-      background-color: #444;
-    }
-    #menuContextual div:last-child {
-      border-bottom: none;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
-
   <header>
     <h1>🎥 Gestor de Videos</h1>
     <nav>
       <button onclick="mostrarTab('galeriaTab')">Galería</button>
       <button onclick="mostrarTab('formularioTab')">Nuevo Video</button>
-      <button onclick="mostrarTab('favoritosTab')">⭐ Favoritos</button>
+      <button onclick="mostrarTab('favoritosTab')">Favoritos</button>
     </nav>
   </header>
 
@@ -153,49 +134,25 @@
   </div>
 
   <div class="tab" id="favoritosTab">
-    <div class="galeria" id="galeriaFavoritos"></div>
+    <div class="galeria" id="favoritos"></div>
   </div>
 
-  <div id="menuContextual"></div>
+  <!-- Modal para reproducir video -->
+  <div id="videoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:9999;">
+    <div style="position:relative; max-width:90%; max-height:90%;">
+      <span onclick="cerrarModal()" style="position:absolute; top:10px; right:20px; font-size:30px; color:white; cursor:pointer;">&times;</span>
+      <video id="videoPlayer" controls style="width:100%; max-height:100%; border-radius:10px; background:black;"></video>
+    </div>
+  </div>
 
   <script>
     const PASSWORD = "finnCracK12@";
     const videosKey = 'videos', actoresKey = 'actrices', categoriasKey = 'categorias', carpetasKey = 'carpetas', favoritosKey = 'favoritos';
-    const galeria = document.getElementById('galeria');
-    const buscador = document.getElementById('buscador');
-
-    let linkSeleccionado = '';
-
-    document.addEventListener('click', () => {
-      document.getElementById('menuContextual').style.display = 'none';
-    });
-
-    function copiarAlPortapapeles(texto) {
-      navigator.clipboard.writeText(texto).then(() => {
-        alert("\u00a1Enlace copiado!");
-      }, () => {
-        alert("Error al copiar");
-      });
-    }
-
-    function mostrarMenuContextual(event, videoUrl) {
-      event.preventDefault();
-      linkSeleccionado = videoUrl;
-
-      const menu = document.getElementById('menuContextual');
-      menu.innerHTML = `
-        <div onclick="copiarAlPortapapeles('${videoUrl}')">🔗 Copiar enlace</div>
-        <div onclick="window.open('${videoUrl}', '_blank')">🚀 Abrir en nueva pestaña</div>
-        <div onclick="copiarAlPortapapeles('${videoUrl}'); alert('Pega este enlace en una pestaña de incógnito')">🕵️ Abrir en incógnito</div>
-      `;
-      menu.style.top = event.pageY + 'px';
-      menu.style.left = event.pageX + 'px';
-      menu.style.display = 'block';
-    }
 
     function mostrarTab(id) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.getElementById(id).classList.add('active');
+      if (id === 'favoritosTab') cargarFavoritos();
     }
 
     function getData(key) {
@@ -259,115 +216,106 @@
       cargarVideos(true);
     }
 
+    function crearCard(video, contenedor) {
+      const card = document.createElement('div');
+      card.className = 'video-card';
+
+      const img = document.createElement('img');
+      img.src = video.imageUrl;
+      img.onclick = () => reproducirVideo(video.videoUrl);
+
+      const nombre = document.createElement('div');
+      nombre.className = 'video-name';
+      nombre.textContent = video.videoNombre;
+
+      const desc = document.createElement('p');
+      desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+
+      const fav = document.createElement('span');
+      fav.className = 'favorito';
+      fav.innerHTML = getData(favoritosKey).includes(video.videoUrl) ? '⭐' : '☆';
+      fav.onclick = () => toggleFavorito(video.videoUrl, fav);
+
+      const del = document.createElement('button');
+      del.textContent = 'Eliminar';
+      del.onclick = () => eliminarVideo(video.videoUrl);
+
+      card.appendChild(img);
+      card.appendChild(nombre);
+      card.appendChild(desc);
+      card.appendChild(fav);
+      card.appendChild(del);
+      contenedor.appendChild(card);
+    }
+
     function cargarVideos(aleatorio = false) {
+      const galeria = document.getElementById('galeria');
       const videos = getData(videosKey);
-      const favoritos = getData(favoritosKey);
       let mostrar = videos;
 
-      if (aleatorio) {
-        mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
-      }
+      if (aleatorio) mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
 
       galeria.innerHTML = '';
-      mostrar.forEach((video) => {
-        const card = document.createElement('div');
-        card.className = 'video-card';
+      mostrar.forEach(video => crearCard(video, galeria));
+    }
 
-        const img = document.createElement('img');
-        img.src = video.imageUrl;
-        img.onclick = () => window.open(video.videoUrl, '_blank');
-        img.oncontextmenu = (e) => mostrarMenuContextual(e, video.videoUrl);
+    function filtrarVideos() {
+      const query = document.getElementById('buscador').value.toLowerCase();
+      const galeria = document.getElementById('galeria');
+      const videos = getData(videosKey);
+      const filtrados = videos.filter(v =>
+        v.videoNombre.toLowerCase().includes(query) ||
+        v.categoria.toLowerCase().includes(query) ||
+        v.carpeta.toLowerCase().includes(query)
+      );
+      galeria.innerHTML = '';
+      filtrados.forEach(video => crearCard(video, galeria));
+    }
 
-        const nombre = document.createElement('div');
-        nombre.className = 'video-name';
-        nombre.textContent = video.videoNombre;
-
-        const desc = document.createElement('p');
-        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
-
-        const controls = document.createElement('div');
-
-        const star = document.createElement('span');
-        star.textContent = favoritos.includes(video.videoUrl) ? '⭐' : '☆';
-        star.style.cursor = 'pointer';
-        star.onclick = () => toggleFavorito(video.videoUrl);
-
-        const trash = document.createElement('span');
-        trash.textContent = ' 🗑️';
-        trash.style.cursor = 'pointer';
-        trash.onclick = () => eliminarVideo(video.videoUrl);
-
-        controls.appendChild(star);
-        controls.appendChild(trash);
-
-        card.appendChild(img);
-        card.appendChild(nombre);
-        card.appendChild(desc);
-        card.appendChild(controls);
-        galeria.appendChild(card);
-      });
-
-      cargarFavoritos();
+    function toggleFavorito(url, estrella) {
+      let favoritos = getData(favoritosKey);
+      if (favoritos.includes(url)) {
+        favoritos = favoritos.filter(f => f !== url);
+        estrella.innerHTML = '☆';
+      } else {
+        favoritos.push(url);
+        estrella.innerHTML = '⭐';
+      }
+      setData(favoritosKey, favoritos);
     }
 
     function cargarFavoritos() {
+      const contenedor = document.getElementById('favoritos');
       const favoritos = getData(favoritosKey);
       const videos = getData(videosKey).filter(v => favoritos.includes(v.videoUrl));
-      const contenedor = document.getElementById('galeriaFavoritos');
       contenedor.innerHTML = '';
-
-      videos.forEach(video => {
-        const card = document.createElement('div');
-        card.className = 'video-card';
-
-        const img = document.createElement('img');
-        img.src = video.imageUrl;
-        img.onclick = () => window.open(video.videoUrl, '_blank');
-        img.oncontextmenu = (e) => mostrarMenuContextual(e, video.videoUrl);
-
-        const nombre = document.createElement('div');
-        nombre.className = 'video-name';
-        nombre.textContent = video.videoNombre;
-
-        const desc = document.createElement('p');
-        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
-
-        const star = document.createElement('span');
-        star.textContent = '⭐';
-        star.style.cursor = 'pointer';
-        star.onclick = () => toggleFavorito(video.videoUrl);
-
-        card.appendChild(img);
-        card.appendChild(nombre);
-        card.appendChild(desc);
-        card.appendChild(star);
-        contenedor.appendChild(card);
-      });
+      videos.forEach(video => crearCard(video, contenedor));
     }
 
-    function toggleFavorito(videoUrl) {
+    function eliminarVideo(url) {
+      if (!confirm("¿Seguro que quieres eliminar este video?")) return;
+      const videos = getData(videosKey).filter(v => v.videoUrl !== url);
+      setData(videosKey, videos);
       let favoritos = getData(favoritosKey);
-      if (favoritos.includes(videoUrl)) {
-        favoritos = favoritos.filter(url => url !== videoUrl);
-      } else {
-        favoritos.push(videoUrl);
-      }
+      favoritos = favoritos.filter(f => f !== url);
       setData(favoritosKey, favoritos);
       cargarVideos();
     }
 
-    function eliminarVideo(videoUrl) {
-      if (!confirm("¿Estás seguro de eliminar este video?")) return;
+    function reproducirVideo(url) {
+      const modal = document.getElementById('videoModal');
+      const player = document.getElementById('videoPlayer');
+      player.src = url;
+      modal.style.display = 'flex';
+    }
 
-      let lista = getData(videosKey);
-      lista = lista.filter(video => video.videoUrl !== videoUrl);
-      setData(videosKey, lista);
-
-      let favoritos = getData(favoritosKey);
-      favoritos = favoritos.filter(url => url !== videoUrl);
-      setData(favoritosKey, favoritos);
-
-      cargarVideos();
+    function cerrarModal() {
+      const modal = document.getElementById('videoModal');
+      const player = document.getElementById('videoPlayer');
+      player.pause();
+      player.currentTime = 0;
+      modal.style.display = 'none';
+      player.src = '';
     }
 
     function pedirContrasena() {
@@ -378,52 +326,6 @@
       } else {
         cargarDatos();
       }
-    }
-
-    function filtrarVideos() {
-      const filtro = buscador.value.toLowerCase();
-      const videos = getData(videosKey).filter(v =>
-        v.videoNombre.toLowerCase().includes(filtro) ||
-        v.categoria.toLowerCase().includes(filtro)
-      );
-      galeria.innerHTML = '';
-      videos.forEach(video => {
-        const card = document.createElement('div');
-        card.className = 'video-card';
-
-        const img = document.createElement('img');
-        img.src = video.imageUrl;
-        img.onclick = () => window.open(video.videoUrl, '_blank');
-        img.oncontextmenu = (e) => mostrarMenuContextual(e, video.videoUrl);
-
-        const nombre = document.createElement('div');
-        nombre.className = 'video-name';
-        nombre.textContent = video.videoNombre;
-
-        const desc = document.createElement('p');
-        desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
-
-        const controls = document.createElement('div');
-
-        const star = document.createElement('span');
-        star.textContent = '☆';
-        star.style.cursor = 'pointer';
-        star.onclick = () => toggleFavorito(video.videoUrl);
-
-        const trash = document.createElement('span');
-        trash.textContent = ' 🗑️';
-        trash.style.cursor = 'pointer';
-        trash.onclick = () => eliminarVideo(video.videoUrl);
-
-        controls.appendChild(star);
-        controls.appendChild(trash);
-
-        card.appendChild(img);
-        card.appendChild(nombre);
-        card.appendChild(desc);
-        card.appendChild(controls);
-        galeria.appendChild(card);
-      });
     }
 
     pedirContrasena();
