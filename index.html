@@ -1,4 +1,3 @@
-<!-- Usa este código HTML completo -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -87,7 +86,7 @@
       font-size: 13px;
       margin-bottom: 5px;
     }
-    #buscador {
+    #buscador, #categoriaFiltro {
       width: 60%;
       max-width: 400px;
       margin-bottom: 10px;
@@ -111,7 +110,10 @@
 
   <div class="tab active" id="galeriaTab">
     <div style="text-align: center; margin: 10px 0;">
-      <input type="text" id="buscador" placeholder="Buscar por nombre o categoría" oninput="filtrarVideos()">
+      <input type="text" id="buscador" placeholder="Buscar por nombre o categoría" oninput="filtrarVideos()"><br>
+      <select id="categoriaFiltro" onchange="filtrarVideos()">
+        <option value="">📂 Todas las categorías</option>
+      </select>
     </div>
     <div class="galeria" id="galeria"></div>
   </div>
@@ -141,6 +143,7 @@
 
     const galeria = document.getElementById('galeria');
     const buscador = document.getElementById('buscador');
+    const categoriaFiltro = document.getElementById('categoriaFiltro');
 
     function mostrarTab(id) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -156,8 +159,14 @@
       localStorage.setItem(key, JSON.stringify(data));
     }
 
-    function actualizarSelect(select, data) {
+    function actualizarSelect(select, data, incluirTodas = false) {
       select.innerHTML = '';
+      if (incluirTodas) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '📂 Todas las categorías';
+        select.appendChild(opt);
+      }
       data.forEach(item => {
         const option = document.createElement('option');
         option.value = item;
@@ -208,6 +217,7 @@
       actualizarSelect(document.getElementById('actrizSelect'), getData(actoresKey));
       actualizarSelect(document.getElementById('categoriaSelect'), getData(categoriasKey));
       actualizarSelect(document.getElementById('carpetaSelect'), getData(carpetasKey));
+      actualizarSelect(categoriaFiltro, getData(categoriasKey), true);
       cargarVideos(true);
     }
 
@@ -217,7 +227,10 @@
 
       const img = document.createElement('img');
       img.src = video.imageUrl;
-      img.onclick = () => window.open(video.videoUrl, '_blank');
+      img.onclick = () => {
+        copiarEnlace(video.videoUrl);
+        window.open(video.videoUrl, '_blank');
+      };
 
       const nombre = document.createElement('div');
       nombre.className = 'video-name';
@@ -250,35 +263,34 @@
     function cargarVideos(aleatorio = false) {
       const videos = getData(videosKey);
       const favoritos = getData(favoritosKey);
-      let mostrar = buscador.value.trim() === "" && aleatorio
-        ? videos.sort(() => 0.5 - Math.random()).slice(0, 15)
-        : videos;
+      const filtroCategoria = categoriaFiltro.value;
+      const query = buscador.value.toLowerCase();
+
+      let mostrar = videos;
+
+      if (query !== "") {
+        mostrar = mostrar.filter(v =>
+          v.videoNombre.toLowerCase().includes(query) ||
+          v.categoria.toLowerCase().includes(query)
+        );
+      }
+
+      if (filtroCategoria !== "") {
+        mostrar = mostrar.filter(v => v.categoria === filtroCategoria);
+      } else if (query === "" && aleatorio) {
+        mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
+      }
+
       galeria.innerHTML = '';
       mostrar.forEach(video => {
         galeria.appendChild(crearCard(video, favoritos));
       });
+
       cargarFavoritos();
     }
 
     function filtrarVideos() {
-      const query = buscador.value.toLowerCase();
-      const videos = getData(videosKey);
-      const favoritos = getData(favoritosKey);
-
-      if (query === "") {
-        cargarVideos(true);
-        return;
-      }
-
-      const filtrados = videos.filter(v =>
-        v.videoNombre.toLowerCase().includes(query) ||
-        v.categoria.toLowerCase().includes(query)
-      );
-
-      galeria.innerHTML = '';
-      filtrados.forEach(video => {
-        galeria.appendChild(crearCard(video, favoritos));
-      });
+      cargarVideos(false);
     }
 
     function cargarFavoritos() {
@@ -315,7 +327,7 @@
 
     function copiarEnlace(videoUrl) {
       navigator.clipboard.writeText(videoUrl).then(() => {
-        alert("Enlace copiado al portapapeles");
+        console.log("Enlace copiado");
       }).catch(err => {
         console.error("Error al copiar:", err);
       });
