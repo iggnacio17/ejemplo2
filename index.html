@@ -5,141 +5,166 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🎥 Gestor de Videos</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #1e1e1e;
       color: #ffffff;
       margin: 0;
-      padding: 0;
-    }
-    header {
-      padding: 10px;
-      text-align: center;
-      background: #2c2c2c;
-    }
-    nav {
       display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 10px;
     }
-    nav button {
-      padding: 10px 15px;
+
+    aside {
+      width: 200px;
+      background: #2c2c2c;
+      padding: 20px 10px;
+      height: 100vh;
+    }
+
+    aside h1 {
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    aside button {
+      width: 100%;
+      margin: 5px 0;
+      padding: 10px;
       background-color: #4CAF50;
       border: none;
       border-radius: 5px;
       color: white;
       cursor: pointer;
     }
-    nav button:hover {
+
+    aside button:hover {
       background-color: #45a049;
     }
-    .tab {
-      display: none;
-      max-width: 1200px;
-      margin: auto;
-      padding: 10px;
+
+    main {
+      flex: 1;
+      padding: 20px;
     }
-    .tab.active {
-      display: block;
+
+    .filtros {
+      margin-bottom: 20px;
     }
-    input, select, button {
-      padding: 5px;
-      margin: 4px;
+
+    .filtros input,
+    .filtros select {
+      width: 90%;
+      max-width: 400px;
+      margin: 5px 0;
+      padding: 8px;
       border-radius: 4px;
       border: none;
     }
-    input, select {
-      width: 180px;
+
+    .tab {
+      display: none;
     }
-    .formulario {
-      background: #2c2c2c;
-      padding: 15px;
-      border-radius: 10px;
+
+    .tab.active {
+      display: block;
     }
+
     .galeria {
-      background: #2c2c2c;
-      padding: 15px;
-      border-radius: 10px;
       display: grid;
-      grid-template-columns: repeat(2, 1fr); /* SOLO 2 COLUMNAS GRANDES */
-      gap: 15px;
-      justify-items: center;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
+
     .video-card {
       background: #3a3a3a;
+      border-radius: 10px;
       padding: 10px;
-      border-radius: 8px;
       text-align: center;
-      max-width: 600px;
-      width: 100%;
     }
+
     .video-card img {
       width: 100%;
-      max-width: 580px;
+      height: auto;
+      max-height: 300px;
+      object-fit: cover;
       border-radius: 10px;
       cursor: pointer;
     }
-    .video-card p {
-      font-size: 14px;
-      margin: 6px 0;
-    }
+
     .video-name {
       font-weight: bold;
       font-size: 16px;
-      margin-bottom: 8px;
+      margin-top: 8px;
     }
-    #buscador, #categoriaFiltro {
-      width: 60%;
-      max-width: 400px;
-      margin-bottom: 10px;
+
+    .video-card p {
+      font-size: 13px;
+      margin: 6px 0;
     }
+
     .acciones span {
       margin: 0 5px;
-      font-size: 18px;
       cursor: pointer;
+      font-size: 18px;
+    }
+
+    .formulario input, .formulario select, .formulario button {
+      display: block;
+      margin: 8px 0;
+      width: 90%;
+      max-width: 400px;
+      padding: 8px;
+    }
+
+    .formulario {
+      background: #2c2c2c;
+      padding: 20px;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>🎥 Gestor de Videos</h1>
-    <nav>
-      <button onclick="mostrarTab('galeriaTab')">Galería</button>
-      <button onclick="mostrarTab('formularioTab')">Nuevo Video</button>
-      <button onclick="mostrarTab('favoritosTab')">⭐ Favoritos</button>
-    </nav>
-  </header>
+  <aside>
+    <h1>🎥 Videos</h1>
+    <button onclick="mostrarTab('galeriaTab')">Galería</button>
+    <button onclick="mostrarTab('formularioTab')">Nuevo Video</button>
+    <button onclick="mostrarTab('favoritosTab')">⭐ Favoritos</button>
+  </aside>
 
-  <div class="tab active" id="galeriaTab">
-    <div style="text-align: center; margin: 10px 0;">
-      <input type="text" id="buscador" placeholder="Buscar por nombre o categoría" oninput="filtrarVideos()"><br>
-      <select id="categoriaFiltro" onchange="filtrarVideos()">
-        <option value="">📂 Todas las categorías</option>
-      </select>
+  <main>
+    <div class="tab active" id="galeriaTab">
+      <div class="filtros">
+        <input type="text" id="buscador" placeholder="Buscar por nombre o categoría" oninput="filtrarVideos()">
+        <select id="categoriaFiltro" onchange="filtrarVideos()">
+          <option value="">📂 Todas las categorías</option>
+        </select>
+      </div>
+      <div class="galeria" id="galeria"></div>
     </div>
-    <div class="galeria" id="galeria"></div>
-  </div>
 
-  <div class="tab" id="formularioTab">
-    <div class="formulario">
-      <input type="text" id="videoUrl" placeholder="Enlace del video"><br>
-      <input type="text" id="imageUrl" placeholder="Enlace de la imagen"><br>
-      <input type="text" id="videoNombre" placeholder="Nombre del video"><br>
-      <input type="text" id="nuevaActriz" placeholder="Agregar actriz">
-      <select id="actrizSelect"></select><br>
-      <input type="text" id="nuevaCategoria" placeholder="Agregar categoría">
-      <select id="categoriaSelect"></select><br>
-      <input type="text" id="nuevaCarpeta" placeholder="Nueva carpeta">
-      <select id="carpetaSelect"></select><br>
-      <button onclick="guardarVideo()">Guardar Video</button>
+    <div class="tab" id="formularioTab">
+      <div class="formulario">
+        <input type="text" id="videoUrl" placeholder="Enlace del video">
+        <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
+        <input type="text" id="videoNombre" placeholder="Nombre del video">
+        <input type="text" id="nuevaActriz" placeholder="Agregar actriz">
+        <select id="actrizSelect"></select>
+        <input type="text" id="nuevaCategoria" placeholder="Agregar categoría">
+        <select id="categoriaSelect"></select>
+        <input type="text" id="nuevaCarpeta" placeholder="Nueva carpeta">
+        <select id="carpetaSelect"></select>
+        <button onclick="guardarVideo()">Guardar Video</button>
+      </div>
     </div>
-  </div>
 
-  <div class="tab" id="favoritosTab">
-    <div class="galeria" id="galeriaFavoritos"></div>
-  </div>
+    <div class="tab" id="favoritosTab">
+      <div class="galeria" id="galeriaFavoritos"></div>
+    </div>
+  </main>
 
   <script>
     const PASSWORD = "finnCracK12@";
