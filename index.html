@@ -178,7 +178,12 @@
     }
 
     function getData(key) {
-      return JSON.parse(localStorage.getItem(key)) || [];
+      try {
+        const data = JSON.parse(localStorage.getItem(key));
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
     }
 
     function setData(key, data) {
@@ -201,28 +206,10 @@
       });
     }
 
-    function guardarVideo() {
-      const video = {
-        videoUrl: document.getElementById('videoUrl').value,
-        imageUrl: document.getElementById('imageUrl').value,
-        videoNombre: document.getElementById('videoNombre').value,
-        actrices: (document.getElementById('nuevaActriz').value || Array.from(document.getElementById('actrizSelect').selectedOptions).map(o => o.value).join(',')).split(',').map(s => s.trim()).filter(Boolean),
-        categorias: (document.getElementById('nuevaCategoria').value || Array.from(document.getElementById('categoriaSelect').selectedOptions).map(o => o.value).join(',')).split(',').map(s => s.trim()).filter(Boolean),
-        carpeta: document.getElementById('nuevaCarpeta').value || document.getElementById('carpetaSelect').value
-      };
-      if (!video.videoUrl || !video.imageUrl || !video.videoNombre) return alert("Todos los campos son obligatorios");
-      const actrices = getData(actoresKey);
-      const categorias = getData(categoriasKey);
-      const carpetas = getData(carpetasKey);
-      video.actrices.forEach(a => { if (!actrices.includes(a)) actrices.push(a); });
-      video.categorias.forEach(c => { if (!categorias.includes(c)) categorias.push(c); });
-      if (!carpetas.includes(video.carpeta)) carpetas.push(video.carpeta);
-      setData(actoresKey, actrices);
-      setData(categoriasKey, categorias);
-      setData(carpetasKey, carpetas);
-      const lista = getData(videosKey); lista.push(video); setData(videosKey, lista);
-      document.querySelectorAll('.formulario input').forEach(input => input.value = '');
-      cargarDatos(); mostrarTab('galeriaTab');
+    function esArraySeguro(campo) {
+      if (Array.isArray(campo)) return campo;
+      if (typeof campo === 'string') return campo.split(',').map(s => s.trim()).filter(Boolean);
+      return [];
     }
 
     function crearCard(video, favoritos) {
@@ -235,14 +222,14 @@
       nombre.className = 'video-name';
       nombre.textContent = video.videoNombre;
       const etiquetas = document.createElement('p');
-      video.actrices.forEach(actriz => {
+      esArraySeguro(video.actrices).forEach(actriz => {
         const tag = document.createElement('span');
         tag.className = 'tag';
         tag.textContent = actriz;
         tag.onclick = () => { buscador.value = actriz; filtrarVideos(); };
         etiquetas.appendChild(tag);
       });
-      video.categorias.forEach(cat => {
+      esArraySeguro(video.categorias).forEach(cat => {
         const tag = document.createElement('span');
         tag.className = 'tag';
         tag.textContent = cat;
@@ -272,19 +259,19 @@
       const favoritos = getData(favoritosKey);
       const filtroCategoria = categoriaFiltro.value;
       const query = buscador.value.toLowerCase();
-      let mostrar = videos.filter(video =>
-        video.videoNombre.toLowerCase().includes(query) ||
-        video.actrices.some(a => a.toLowerCase().includes(query)) ||
-        video.categorias.some(c => c.toLowerCase().includes(query))
-      );
-      if (filtroCategoria !== "") mostrar = mostrar.filter(v => v.categorias.includes(filtroCategoria));
+      let mostrar = videos.filter(video => {
+        const actrices = esArraySeguro(video.actrices);
+        const categorias = esArraySeguro(video.categorias);
+        return video.videoNombre.toLowerCase().includes(query) ||
+          actrices.some(a => a.toLowerCase().includes(query)) ||
+          categorias.some(c => c.toLowerCase().includes(query));
+      });
+      if (filtroCategoria !== "") mostrar = mostrar.filter(v => esArraySeguro(v.categorias).includes(filtroCategoria));
       galeria.innerHTML = '';
       mostrar.forEach(video => galeria.appendChild(crearCard(video, favoritos)));
     }
 
-    function filtrarVideos() {
-      cargarVideos();
-    }
+    function filtrarVideos() { cargarVideos(); }
 
     function cargarDatos() {
       actualizarSelect(document.getElementById('actrizSelect'), getData(actoresKey));
