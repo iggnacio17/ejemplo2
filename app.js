@@ -1,30 +1,20 @@
-
 // app.js
 
 const PASSWORD = "finnCracK12@";
-
-const KEYS = {
-  videos: 'videos',
-  shorts: 'shorts',
-  actrices: 'actrices',
-  categorias: 'categorias',
-  carpetas: 'carpetas',
-  favoritos: 'favoritos',
-  favoritosShorts: 'favoritosShorts'
-};
-
-const buscador = document.getElementById('buscador');
-const categoriaFiltro = document.getElementById('categoriaFiltro');
-const galeria = document.getElementById('galeria');
-const galeriaShorts = document.getElementById('galeriaShorts');
-const galeriaFavoritos = document.getElementById('galeriaFavoritos');
+const videosKey = 'videos';
+const shortsKey = 'shorts';
+const actoresKey = 'actrices';
+const categoriasKey = 'categorias';
+const carpetasKey = 'carpetas';
+const favoritosKey = 'favoritos';
+const favoritosShortsKey = 'favoritosShorts';
 
 function mostrarTab(id) {
   document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if (id === 'galeriaTab') cargarVideos();
-  else if (id === 'shortsTab') cargarShorts();
-  else if (id === 'favoritosTab') cargarFavoritos();
+  if (id === "galeriaTab") cargarVideos(true);
+  else if (id === "shortsTab") cargarShorts();
+  else if (id === "favoritosTab") cargarFavoritos();
 }
 
 function getData(key) {
@@ -35,84 +25,64 @@ function setData(key, data) {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
-function cargarDatos() {
-  actualizarSelect(document.getElementById('actrizSelect'), getData(KEYS.actrices));
-  actualizarSelect(document.getElementById('categoriaSelect'), getData(KEYS.categorias));
-  actualizarSelect(document.getElementById('carpetaSelect'), getData(KEYS.carpetas));
-  actualizarSelect(categoriaFiltro, getData(KEYS.categorias), true);
-  cargarVideos();
-}
-
 function actualizarSelect(select, data, incluirTodas = false) {
   select.innerHTML = '';
   if (incluirTodas) {
-    const option = document.createElement('option');
-    option.value = '';
-    option.textContent = '📂 Todas las categorías';
-    select.appendChild(option);
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = '📂 Todas las categorías';
+    select.appendChild(opt);
   }
   data.forEach(item => {
-    const opt = document.createElement('option');
-    opt.value = item;
-    opt.textContent = item;
-    select.appendChild(opt);
+    const option = document.createElement('option');
+    option.value = item;
+    option.textContent = item;
+    select.appendChild(option);
   });
 }
 
 function guardarVideo() {
+  const actricesInput = document.getElementById('nuevaActriz').value;
+  const categoriasInput = document.getElementById('nuevaCategoria').value;
+
   const video = {
+    id: Date.now(),
     videoUrl: document.getElementById('videoUrl').value,
     imageUrl: document.getElementById('imageUrl').value,
     videoNombre: document.getElementById('videoNombre').value,
-    actrices: document.getElementById('nuevaActriz').value.split(',').map(a => a.trim()).filter(Boolean),
-    categorias: document.getElementById('nuevaCategoria').value.split(',').map(c => c.trim()).filter(Boolean),
+    actrices: actricesInput.split(',').map(s => s.trim()).filter(Boolean),
+    categorias: categoriasInput.split(',').map(s => s.trim()).filter(Boolean),
     carpeta: document.getElementById('nuevaCarpeta').value || document.getElementById('carpetaSelect').value
   };
 
   if (!video.videoUrl || !video.imageUrl || !video.videoNombre) return alert("Todos los campos son obligatorios");
 
-  const actrices = getData(KEYS.actrices);
-  const categorias = getData(KEYS.categorias);
-  const carpetas = getData(KEYS.carpetas);
+  const actrices = getData(actoresKey);
+  const categorias = getData(categoriasKey);
+  const carpetas = getData(carpetasKey);
 
   video.actrices.forEach(a => { if (!actrices.includes(a)) actrices.push(a); });
   video.categorias.forEach(c => { if (!categorias.includes(c)) categorias.push(c); });
   if (video.carpeta && !carpetas.includes(video.carpeta)) carpetas.push(video.carpeta);
 
-  setData(KEYS.actrices, actrices);
-  setData(KEYS.categorias, categorias);
-  setData(KEYS.carpetas, carpetas);
+  setData(actoresKey, actrices);
+  setData(categoriasKey, categorias);
+  setData(carpetasKey, carpetas);
 
-  const lista = getData(KEYS.videos);
+  const lista = getData(videosKey);
   lista.push(video);
-  setData(KEYS.videos, lista);
+  setData(videosKey, lista);
 
   document.querySelectorAll('.formulario input').forEach(input => input.value = '');
   cargarDatos();
   mostrarTab('galeriaTab');
 }
 
-function guardarShort() {
-  const short = {
-    videoUrl: document.getElementById('shortUrl').value,
-    imageUrl: document.getElementById('shortImageUrl').value
-  };
-  if (!short.videoUrl || !short.imageUrl) return alert("Ambos campos son obligatorios");
-
-  const lista = getData(KEYS.shorts);
-  lista.push(short);
-  setData(KEYS.shorts, lista);
-
-  document.getElementById('shortUrl').value = '';
-  document.getElementById('shortImageUrl').value = '';
-  cargarShorts();
-}
-
-function crearTag(texto, onClick) {
+function crearTag(tag, callback) {
   const span = document.createElement('span');
   span.className = 'tag';
-  span.textContent = texto;
-  span.onclick = onClick;
+  span.textContent = tag;
+  span.onclick = () => callback(tag);
   return span;
 }
 
@@ -122,15 +92,21 @@ function crearCard(video, favoritos) {
 
   const img = document.createElement('img');
   img.src = video.imageUrl;
-  img.onclick = () => { copiarEnlace(video.videoUrl); window.open(video.videoUrl, '_blank'); };
+  img.onclick = () => {
+    copiarEnlace(video.videoUrl);
+    window.open(video.videoUrl, '_blank');
+  };
 
   const nombre = document.createElement('div');
   nombre.className = 'video-name';
   nombre.textContent = video.videoNombre;
 
-  const etiquetas = document.createElement('p');
-  (video.actrices || []).forEach(a => etiquetas.appendChild(crearTag(a, () => filtrarPorEtiqueta(a))));
-  (video.categorias || []).forEach(c => etiquetas.appendChild(crearTag(c, () => filtrarPorEtiqueta(c))));
+  const desc = document.createElement('p');
+  desc.innerHTML = `📁 ${video.carpeta}`;
+
+  const tags = document.createElement('div');
+  video.actrices.forEach(a => tags.appendChild(crearTag(a, buscarPorEtiqueta)));
+  video.categorias.forEach(c => tags.appendChild(crearTag(c, buscarPorEtiqueta)));
 
   const acciones = document.createElement('div');
   acciones.className = 'acciones';
@@ -143,170 +119,105 @@ function crearCard(video, favoritos) {
   copy.textContent = '📋';
   copy.onclick = () => copiarEnlace(video.videoUrl);
 
+  const edit = document.createElement('span');
+  edit.textContent = '✏️';
+  edit.onclick = () => editarVideo(video);
+
   const trash = document.createElement('span');
   trash.textContent = '🗑️';
   trash.onclick = () => eliminarVideo(video.videoUrl);
 
-  acciones.append(star, copy, trash);
-  card.append(img, nombre, etiquetas, acciones);
+  acciones.append(star, copy, edit, trash);
+  card.append(img, nombre, desc, tags, acciones);
   return card;
 }
 
-function cargarVideos() {
-  const videos = getData(KEYS.videos);
-  const favoritos = getData(KEYS.favoritos);
-  const query = buscador.value.toLowerCase().split(" ").filter(Boolean);
-  const filtroCategoria = categoriaFiltro.value;
+function cargarVideos(aleatorio = false) {
+  const videos = getData(videosKey);
+  const favoritos = getData(favoritosKey);
+  const filtro = document.getElementById('categoriaFiltro').value;
+  const query = document.getElementById('buscador').value.toLowerCase().split(" ");
 
-  let filtrados = videos.filter(video => {
-    return query.every(palabra =>
-      video.videoNombre.toLowerCase().includes(palabra) ||
-      (video.actrices || []).some(a => a.toLowerCase().includes(palabra)) ||
-      (video.categorias || []).some(c => c.toLowerCase().includes(palabra))
+  let mostrar = videos.filter(v => {
+    return query.every(q =>
+      v.videoNombre.toLowerCase().includes(q) ||
+      (v.actrices && v.actrices.some(a => a.toLowerCase().includes(q))) ||
+      (v.categorias && v.categorias.some(c => c.toLowerCase().includes(q)))
     );
   });
 
-  if (filtroCategoria) {
-    filtrados = filtrados.filter(v => (v.categorias || []).includes(filtroCategoria));
-  }
+  if (filtro !== '') mostrar = mostrar.filter(v => v.categorias.includes(filtro));
+  else if (query.length === 1 && query[0] === '' && aleatorio)
+    mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
 
+  const galeria = document.getElementById('galeria');
   galeria.innerHTML = '';
-  filtrados.forEach(video => galeria.appendChild(crearCard(video, favoritos)));
+  mostrar.forEach(video => galeria.appendChild(crearCard(video, favoritos)));
 }
 
-function filtrarVideos() {
-  cargarVideos();
-}
-
-function filtrarPorEtiqueta(valor) {
-  buscador.value = valor;
+function buscarPorEtiqueta(valor) {
+  document.getElementById('buscador').value = valor;
   cargarVideos();
 }
 
 function copiarEnlace(url) {
-  navigator.clipboard.writeText(url).then(() => console.log("Copiado: " + url));
+  navigator.clipboard.writeText(url).then(() => console.log('Copiado')); 
+}
+
+function editarVideo(video) {
+  document.getElementById('videoUrl').value = video.videoUrl;
+  document.getElementById('imageUrl').value = video.imageUrl;
+  document.getElementById('videoNombre').value = video.videoNombre;
+  document.getElementById('nuevaActriz').value = video.actrices.join(', ');
+  document.getElementById('nuevaCategoria').value = video.categorias.join(', ');
+  document.getElementById('nuevaCarpeta').value = video.carpeta;
+
+  eliminarVideo(video.videoUrl, false);
+  mostrarTab('formularioTab');
+}
+
+function eliminarVideo(videoUrl, confirmar = true) {
+  if (confirmar && !confirm('¿Eliminar este video?')) return;
+  let lista = getData(videosKey);
+  lista = lista.filter(v => v.videoUrl !== videoUrl);
+  setData(videosKey, lista);
+  let favoritos = getData(favoritosKey);
+  favoritos = favoritos.filter(url => url !== videoUrl);
+  setData(favoritosKey, favoritos);
+  cargarVideos();
 }
 
 function toggleFavorito(videoUrl) {
-  let favoritos = getData(KEYS.favoritos);
-  favoritos = favoritos.includes(videoUrl)
-    ? favoritos.filter(url => url !== videoUrl)
-    : [...favoritos, videoUrl];
-  setData(KEYS.favoritos, favoritos);
+  let favoritos = getData(favoritosKey);
+  if (favoritos.includes(videoUrl)) favoritos = favoritos.filter(url => url !== videoUrl);
+  else favoritos.push(videoUrl);
+  setData(favoritosKey, favoritos);
   cargarVideos();
-  cargarFavoritos();
 }
 
-function eliminarVideo(videoUrl) {
-  if (!confirm("¿Eliminar video?")) return;
-  const lista = getData(KEYS.videos).filter(v => v.videoUrl !== videoUrl);
-  const favoritos = getData(KEYS.favoritos).filter(f => f !== videoUrl);
-  setData(KEYS.videos, lista);
-  setData(KEYS.favoritos, favoritos);
+function cargarDatos() {
+  actualizarSelect(document.getElementById('actrizSelect'), getData(actoresKey));
+  actualizarSelect(document.getElementById('categoriaSelect'), getData(categoriasKey));
+  actualizarSelect(document.getElementById('carpetaSelect'), getData(carpetasKey));
+  actualizarSelect(document.getElementById('categoriaFiltro'), getData(categoriasKey), true);
   cargarVideos();
-  cargarFavoritos();
-}
-
-function cargarShorts() {
-  const shorts = getData(KEYS.shorts);
-  const favoritos = getData(KEYS.favoritosShorts);
-  galeriaShorts.innerHTML = '';
-  shorts.forEach(short => {
-    const card = document.createElement('div');
-    card.className = 'short-card';
-
-    const img = document.createElement('img');
-    img.src = short.imageUrl;
-    img.onclick = () => { copiarEnlace(short.videoUrl); window.open(short.videoUrl, '_blank'); };
-
-    const acciones = document.createElement('div');
-    acciones.className = 'acciones';
-    acciones.style.marginTop = '10px';
-
-    const star = document.createElement('span');
-    star.textContent = favoritos.includes(short.videoUrl) ? '⭐' : '☆';
-    star.onclick = () => toggleFavoritoShort(short.videoUrl);
-
-    const copy = document.createElement('span');
-    copy.textContent = '📋';
-    copy.onclick = () => copiarEnlace(short.videoUrl);
-
-    const trash = document.createElement('span');
-    trash.textContent = '🗑️';
-    trash.onclick = () => eliminarShort(short.videoUrl);
-
-    acciones.append(star, copy, trash);
-    card.append(img, acciones);
-    galeriaShorts.appendChild(card);
-  });
-}
-
-function toggleFavoritoShort(videoUrl) {
-  let favoritos = getData(KEYS.favoritosShorts);
-  favoritos = favoritos.includes(videoUrl)
-    ? favoritos.filter(f => f !== videoUrl)
-    : [...favoritos, videoUrl];
-  setData(KEYS.favoritosShorts, favoritos);
-  cargarShorts();
-  cargarFavoritos();
-}
-
-function eliminarShort(videoUrl) {
-  if (!confirm("¿Eliminar short?")) return;
-  const lista = getData(KEYS.shorts).filter(s => s.videoUrl !== videoUrl);
-  const favoritos = getData(KEYS.favoritosShorts).filter(f => f !== videoUrl);
-  setData(KEYS.shorts, lista);
-  setData(KEYS.favoritosShorts, favoritos);
-  cargarShorts();
-  cargarFavoritos();
-}
-
-function cargarFavoritos() {
-  galeriaFavoritos.innerHTML = '';
-  const videos = getData(KEYS.videos);
-  const shorts = getData(KEYS.shorts);
-  const favoritos = getData(KEYS.favoritos);
-  const favoritosShorts = getData(KEYS.favoritosShorts);
-  videos.filter(v => favoritos.includes(v.videoUrl)).forEach(v => galeriaFavoritos.appendChild(crearCard(v, favoritos)));
-  shorts.filter(s => favoritosShorts.includes(s.videoUrl)).forEach(short => {
-    const card = document.createElement('div');
-    card.className = 'short-card';
-    const img = document.createElement('img');
-    img.src = short.imageUrl;
-    img.onclick = () => { copiarEnlace(short.videoUrl); window.open(short.videoUrl, '_blank'); };
-    const acciones = document.createElement('div');
-    acciones.className = 'acciones';
-    acciones.style.marginTop = '10px';
-    const star = document.createElement('span');
-    star.textContent = '⭐';
-    star.onclick = () => toggleFavoritoShort(short.videoUrl);
-    const copy = document.createElement('span');
-    copy.textContent = '📋';
-    copy.onclick = () => copiarEnlace(short.videoUrl);
-    const trash = document.createElement('span');
-    trash.textContent = '🗑️';
-    trash.onclick = () => eliminarShort(short.videoUrl);
-    acciones.append(star, copy, trash);
-    card.append(img, acciones);
-    galeriaFavoritos.appendChild(card);
-  });
 }
 
 function exportarBaseDatos() {
   const datos = {
-    [KEYS.videos]: getData(KEYS.videos),
-    [KEYS.shorts]: getData(KEYS.shorts),
-    [KEYS.actrices]: getData(KEYS.actrices),
-    [KEYS.categorias]: getData(KEYS.categorias),
-    [KEYS.carpetas]: getData(KEYS.carpetas),
-    [KEYS.favoritos]: getData(KEYS.favoritos),
-    [KEYS.favoritosShorts]: getData(KEYS.favoritosShorts)
+    [videosKey]: getData(videosKey),
+    [shortsKey]: getData(shortsKey),
+    [actoresKey]: getData(actoresKey),
+    [categoriasKey]: getData(categoriasKey),
+    [carpetasKey]: getData(carpetasKey),
+    [favoritosKey]: getData(favoritosKey),
+    [favoritosShortsKey]: getData(favoritosShortsKey)
   };
   const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `backup_videos_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -315,27 +226,11 @@ function importarBaseDatos(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = (e) => {
     try {
       const datos = JSON.parse(e.target.result);
-      Object.keys(KEYS).forEach(k => setData(KEYS[k], datos[KEYS[k]] || []));
-      alert("Base de datos importada.");
-      cargarDatos();
-    } catch {
-      alert("Archivo JSON no válido.");
-    }
-  };
-  reader.readAsText(file);
-}
-
-function pedirContrasena() {
-  const input = prompt("Introduce la contraseña:");
-  if (input !== PASSWORD) {
-    alert("Contraseña incorrecta. Acceso denegado.");
-    document.body.innerHTML = "<h1 style='color: red; text-align:center;'>Acceso Denegado</h1>";
-  } else {
-    cargarDatos();
-  }
-}
-
-pedirContrasena();
+      setData(videosKey, datos[videosKey] || []);
+      setData(shortsKey, datos[shortsKey] || []);
+      setData(actoresKey, datos[actoresKey] || []);
+      setData(categoriasKey, datos[categoriasKey] || []);
+      setData(carp...
