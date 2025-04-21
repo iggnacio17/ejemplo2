@@ -172,7 +172,7 @@
     function mostrarTab(id) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-      if (id === "galeriaTab") cargarVideos(true);
+      if (id === "galeriaTab") cargarDatos();
       else if (id === "shortsTab") cargarShorts();
       else if (id === "favoritosTab") cargarFavoritos();
     }
@@ -206,17 +206,17 @@
         videoUrl: document.getElementById('videoUrl').value,
         imageUrl: document.getElementById('imageUrl').value,
         videoNombre: document.getElementById('videoNombre').value,
-        actrices: (document.getElementById('nuevaActriz').value || Array.from(document.getElementById('actrizSelect').selectedOptions).map(o => o.value)).split(',').map(s => s.trim()).filter(Boolean),
-        categorias: (document.getElementById('nuevaCategoria').value || Array.from(document.getElementById('categoriaSelect').selectedOptions).map(o => o.value)).split(',').map(s => s.trim()).filter(Boolean),
+        actrices: (document.getElementById('nuevaActriz').value || Array.from(document.getElementById('actrizSelect').selectedOptions).map(o => o.value).join(',')).split(',').map(s => s.trim()).filter(Boolean),
+        categorias: (document.getElementById('nuevaCategoria').value || Array.from(document.getElementById('categoriaSelect').selectedOptions).map(o => o.value).join(',')).split(',').map(s => s.trim()).filter(Boolean),
         carpeta: document.getElementById('nuevaCarpeta').value || document.getElementById('carpetaSelect').value
       };
       if (!video.videoUrl || !video.imageUrl || !video.videoNombre) return alert("Todos los campos son obligatorios");
       const actrices = getData(actoresKey);
       const categorias = getData(categoriasKey);
       const carpetas = getData(carpetasKey);
-      video.actrices.forEach(a => { if (a && !actrices.includes(a)) actrices.push(a); });
-      video.categorias.forEach(c => { if (c && !categorias.includes(c)) categorias.push(c); });
-      if (video.carpeta && !carpetas.includes(video.carpeta)) carpetas.push(video.carpeta);
+      video.actrices.forEach(a => { if (!actrices.includes(a)) actrices.push(a); });
+      video.categorias.forEach(c => { if (!categorias.includes(c)) categorias.push(c); });
+      if (!carpetas.includes(video.carpeta)) carpetas.push(video.carpeta);
       setData(actoresKey, actrices);
       setData(categoriasKey, categorias);
       setData(carpetasKey, carpetas);
@@ -267,29 +267,49 @@
       return card;
     }
 
-    function cargarVideos(aleatorio = false) {
+    function cargarVideos() {
       const videos = getData(videosKey);
       const favoritos = getData(favoritosKey);
       const filtroCategoria = categoriaFiltro.value;
       const query = buscador.value.toLowerCase();
-      let mostrar = videos;
-      if (query !== "") {
-        mostrar = mostrar.filter(v => v.videoNombre.toLowerCase().includes(query) || v.actrices.some(a => a.toLowerCase().includes(query)) || v.categorias.some(c => c.toLowerCase().includes(query)));
-      }
+      let mostrar = videos.filter(video =>
+        video.videoNombre.toLowerCase().includes(query) ||
+        video.actrices.some(a => a.toLowerCase().includes(query)) ||
+        video.categorias.some(c => c.toLowerCase().includes(query))
+      );
       if (filtroCategoria !== "") mostrar = mostrar.filter(v => v.categorias.includes(filtroCategoria));
-      else if (query === "" && aleatorio) mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
       galeria.innerHTML = '';
       mostrar.forEach(video => galeria.appendChild(crearCard(video, favoritos)));
     }
 
-    function filtrarVideos() { cargarVideos(false); }
+    function filtrarVideos() {
+      cargarVideos();
+    }
 
     function cargarDatos() {
       actualizarSelect(document.getElementById('actrizSelect'), getData(actoresKey));
       actualizarSelect(document.getElementById('categoriaSelect'), getData(categoriasKey));
       actualizarSelect(document.getElementById('carpetaSelect'), getData(carpetasKey));
       actualizarSelect(categoriaFiltro, getData(categoriasKey), true);
-      cargarVideos(true);
+      cargarVideos();
+    }
+
+    function copiarEnlace(videoUrl) {
+      navigator.clipboard.writeText(videoUrl);
+    }
+
+    function toggleFavorito(videoUrl) {
+      let favoritos = getData(favoritosKey);
+      if (favoritos.includes(videoUrl)) favoritos = favoritos.filter(url => url !== videoUrl);
+      else favoritos.push(videoUrl);
+      setData(favoritosKey, favoritos);
+      cargarVideos();
+    }
+
+    function eliminarVideo(videoUrl) {
+      let lista = getData(videosKey).filter(video => video.videoUrl !== videoUrl);
+      setData(videosKey, lista);
+      cargarVideos();
     }
 
     function pedirContrasena() {
