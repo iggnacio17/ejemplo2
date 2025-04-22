@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🎥 Gestor de Videos</title>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #1e1e1e;
@@ -13,17 +16,20 @@
       margin: 0;
       display: flex;
     }
+
     aside {
       width: 200px;
       background: #2c2c2c;
       padding: 20px 10px;
       height: 100vh;
     }
+
     aside h1 {
       font-size: 18px;
       text-align: center;
       margin-bottom: 20px;
     }
+
     aside button {
       width: 100%;
       margin: 5px 0;
@@ -34,14 +40,22 @@
       color: white;
       cursor: pointer;
     }
+
     aside button:hover {
       background-color: #45a049;
     }
-    main { flex: 1; padding: 20px; }
+
+    main {
+      flex: 1;
+      padding: 20px;
+    }
+
     .filtros {
       margin-bottom: 20px;
     }
-    .filtros input, .filtros select {
+
+    .filtros input,
+    .filtros select {
       width: 90%;
       max-width: 400px;
       margin: 5px 0;
@@ -49,21 +63,29 @@
       border-radius: 4px;
       border: none;
     }
-    .tab { display: none; }
-    .tab.active { display: block; }
+
+    .tab {
+      display: none;
+    }
+
+    .tab.active {
+      display: block;
+    }
+
     .galeria {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 20px;
     }
-    .video-card, .short-card {
+
+    .video-card {
       background: #3a3a3a;
       border-radius: 10px;
       padding: 10px;
       text-align: center;
-      height: 100%;
     }
-    .video-card img, .short-card img {
+
+    .video-card img {
       width: 100%;
       height: auto;
       max-height: 300px;
@@ -71,20 +93,24 @@
       border-radius: 10px;
       cursor: pointer;
     }
+
     .video-name {
       font-weight: bold;
       font-size: 16px;
       margin-top: 8px;
     }
+
     .video-card p {
       font-size: 13px;
       margin: 6px 0;
     }
+
     .acciones span {
       margin: 0 5px;
       cursor: pointer;
       font-size: 18px;
     }
+
     .formulario input, .formulario select, .formulario button {
       display: block;
       margin: 8px 0;
@@ -92,32 +118,40 @@
       max-width: 400px;
       padding: 8px;
     }
+
     .formulario {
       background: #2c2c2c;
       padding: 20px;
       border-radius: 10px;
     }
-    .tag {
-      background-color: #555;
-      border-radius: 5px;
-      padding: 2px 6px;
-      margin: 2px;
-      display: inline-block;
+
+    .short-card {
+      background: #3a3a3a;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      height: 100%;
+    }
+
+    .short-card img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      border-radius: 10px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
+
   <aside>
     <h1>🎥 Videos</h1>
     <button onclick="mostrarTab('galeriaTab')">Galería</button>
     <button onclick="mostrarTab('formularioTab')">Nuevo Video</button>
     <button onclick="mostrarTab('shortsTab')">Nuevo Short</button>
     <button onclick="mostrarTab('favoritosTab')">⭐ Favoritos</button>
-    <button onclick="exportarBaseDatos()">⬇️ Exportar</button>
-    <button onclick="document.getElementById('importInput').click()">⬆️ Importar</button>
-    <input type="file" id="importInput" accept=".json" style="display: none" onchange="importarBaseDatos(event)">
   </aside>
+
   <main>
     <div class="tab active" id="galeriaTab">
       <div class="filtros">
@@ -128,20 +162,22 @@
       </div>
       <div class="galeria" id="galeria"></div>
     </div>
+
     <div class="tab" id="formularioTab">
       <div class="formulario">
         <input type="text" id="videoUrl" placeholder="Enlace del video">
         <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
         <input type="text" id="videoNombre" placeholder="Nombre del video">
-        <input type="text" id="nuevaActriz" placeholder="Agregar actrices (separadas por comas)">
-        <select id="actrizSelect" multiple></select>
-        <input type="text" id="nuevaCategoria" placeholder="Agregar categorías (separadas por comas)">
-        <select id="categoriaSelect" multiple></select>
+        <input type="text" id="nuevaActriz" placeholder="Agregar actriz">
+        <select id="actrizSelect"></select>
+        <input type="text" id="nuevaCategoria" placeholder="Agregar categoría">
+        <select id="categoriaSelect"></select>
         <input type="text" id="nuevaCarpeta" placeholder="Nueva carpeta">
         <select id="carpetaSelect"></select>
         <button onclick="guardarVideo()">Guardar Video</button>
       </div>
     </div>
+
     <div class="tab" id="shortsTab">
       <div class="formulario">
         <input type="text" id="shortUrl" placeholder="Enlace del short">
@@ -150,10 +186,12 @@
       </div>
       <div class="galeria" id="galeriaShorts" style="margin-top: 20px;"></div>
     </div>
+
     <div class="tab" id="favoritosTab">
       <div class="galeria" id="galeriaFavoritos"></div>
     </div>
   </main>
+
   <script>
     const PASSWORD = "finnCracK12@";
     const videosKey = 'videos';
@@ -172,9 +210,14 @@
     function mostrarTab(id) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-      if (id === "galeriaTab") cargarVideos(true);
-      else if (id === "shortsTab") cargarShorts();
-      else if (id === "favoritosTab") cargarFavoritos();
+      
+      if (id === "galeriaTab") {
+        cargarVideos(true);
+      } else if (id === "shortsTab") {
+        cargarShorts();
+      } else if (id === "favoritosTab") {
+        cargarFavoritos();
+      }
     }
 
     function getData(key) {
@@ -206,64 +249,140 @@
         videoUrl: document.getElementById('videoUrl').value,
         imageUrl: document.getElementById('imageUrl').value,
         videoNombre: document.getElementById('videoNombre').value,
-        actrices: (document.getElementById('nuevaActriz').value || Array.from(document.getElementById('actrizSelect').selectedOptions).map(o => o.value)).split(',').map(s => s.trim()).filter(Boolean),
-        categorias: (document.getElementById('nuevaCategoria').value || Array.from(document.getElementById('categoriaSelect').selectedOptions).map(o => o.value)).split(',').map(s => s.trim()).filter(Boolean),
+        actriz: document.getElementById('nuevaActriz').value || document.getElementById('actrizSelect').value,
+        categoria: document.getElementById('nuevaCategoria').value || document.getElementById('categoriaSelect').value,
         carpeta: document.getElementById('nuevaCarpeta').value || document.getElementById('carpetaSelect').value
       };
+
       if (!video.videoUrl || !video.imageUrl || !video.videoNombre) return alert("Todos los campos son obligatorios");
+
       const actrices = getData(actoresKey);
       const categorias = getData(categoriasKey);
       const carpetas = getData(carpetasKey);
-      video.actrices.forEach(a => { if (a && !actrices.includes(a)) actrices.push(a); });
-      video.categorias.forEach(c => { if (c && !categorias.includes(c)) categorias.push(c); });
-      if (video.carpeta && !carpetas.includes(video.carpeta)) carpetas.push(video.carpeta);
-      setData(actoresKey, actrices);
-      setData(categoriasKey, categorias);
-      setData(carpetasKey, carpetas);
-      const lista = getData(videosKey); lista.push(video); setData(videosKey, lista);
+
+      if (video.actriz && !actrices.includes(video.actriz)) {
+        actrices.push(video.actriz);
+        setData(actoresKey, actrices);
+      }
+      if (video.categoria && !categorias.includes(video.categoria)) {
+        categorias.push(video.categoria);
+        setData(categoriasKey, categorias);
+      }
+      if (video.carpeta && !carpetas.includes(video.carpeta)) {
+        carpetas.push(video.carpeta);
+        setData(carpetasKey, carpetas);
+      }
+
+      const lista = getData(videosKey);
+      lista.push(video);
+      setData(videosKey, lista);
+
       document.querySelectorAll('.formulario input').forEach(input => input.value = '');
-      cargarDatos(); mostrarTab('galeriaTab');
+      cargarDatos();
+      mostrarTab('galeriaTab');
+    }
+
+    function guardarShort() {
+      const short = {
+        videoUrl: document.getElementById('shortUrl').value,
+        imageUrl: document.getElementById('shortImageUrl').value
+      };
+
+      if (!short.videoUrl || !short.imageUrl) return alert("Ambos campos son obligatorios");
+
+      const lista = getData(shortsKey);
+      lista.push(short);
+      setData(shortsKey, lista);
+
+      document.getElementById('shortUrl').value = '';
+      document.getElementById('shortImageUrl').value = '';
+      cargarShorts();
+    }
+
+    function cargarDatos() {
+      actualizarSelect(document.getElementById('actrizSelect'), getData(actoresKey));
+      actualizarSelect(document.getElementById('categoriaSelect'), getData(categoriasKey));
+      actualizarSelect(document.getElementById('carpetaSelect'), getData(carpetasKey));
+      actualizarSelect(categoriaFiltro, getData(categoriasKey), true);
+      cargarVideos(true);
+    }
+
+    function cargarShorts() {
+      const shorts = getData(shortsKey);
+      const favoritos = getData(favoritosShortsKey);
+      
+      galeriaShorts.innerHTML = '';
+      
+      shorts.forEach(short => {
+        const card = document.createElement('div');
+        card.className = 'short-card';
+
+        const img = document.createElement('img');
+        img.src = short.imageUrl;
+        img.onclick = () => {
+          copiarEnlace(short.videoUrl);
+          window.open(short.videoUrl, '_blank');
+        };
+
+        const acciones = document.createElement('div');
+        acciones.className = 'acciones';
+        acciones.style.marginTop = '10px';
+
+        const star = document.createElement('span');
+        star.textContent = favoritos.includes(short.videoUrl) ? '⭐' : '☆';
+        star.onclick = () => toggleFavoritoShort(short.videoUrl);
+
+        const copy = document.createElement('span');
+        copy.textContent = '📋';
+        copy.title = 'Copiar enlace';
+        copy.onclick = () => copiarEnlace(short.videoUrl);
+
+        const trash = document.createElement('span');
+        trash.textContent = '🗑️';
+        trash.onclick = () => eliminarShort(short.videoUrl);
+
+        acciones.append(star, copy, trash);
+        card.append(img, acciones);
+        galeriaShorts.appendChild(card);
+      });
     }
 
     function crearCard(video, favoritos) {
       const card = document.createElement('div');
       card.className = 'video-card';
+
       const img = document.createElement('img');
       img.src = video.imageUrl;
-      img.onclick = () => { copiarEnlace(video.videoUrl); window.open(video.videoUrl, '_blank'); };
+      img.onclick = () => {
+        copiarEnlace(video.videoUrl);
+        window.open(video.videoUrl, '_blank');
+      };
+
       const nombre = document.createElement('div');
       nombre.className = 'video-name';
       nombre.textContent = video.videoNombre;
-      const etiquetas = document.createElement('p');
-      video.actrices.forEach(actriz => {
-        const tag = document.createElement('span');
-        tag.className = 'tag';
-        tag.textContent = actriz;
-        tag.onclick = () => { buscador.value = actriz; filtrarVideos(); };
-        etiquetas.appendChild(tag);
-      });
-      video.categorias.forEach(cat => {
-        const tag = document.createElement('span');
-        tag.className = 'tag';
-        tag.textContent = cat;
-        tag.onclick = () => { buscador.value = cat; filtrarVideos(); };
-        etiquetas.appendChild(tag);
-      });
-      const carpeta = document.createElement('p');
-      carpeta.textContent = `📁 ${video.carpeta}`;
+
+      const desc = document.createElement('p');
+      desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+
       const acciones = document.createElement('div');
       acciones.className = 'acciones';
+
       const star = document.createElement('span');
       star.textContent = favoritos.includes(video.videoUrl) ? '⭐' : '☆';
       star.onclick = () => toggleFavorito(video.videoUrl);
+
       const copy = document.createElement('span');
       copy.textContent = '📋';
+      copy.title = 'Copiar enlace';
       copy.onclick = () => copiarEnlace(video.videoUrl);
+
       const trash = document.createElement('span');
       trash.textContent = '🗑️';
       trash.onclick = () => eliminarVideo(video.videoUrl);
+
       acciones.append(star, copy, trash);
-      card.append(img, nombre, etiquetas, carpeta, acciones);
+      card.append(img, nombre, desc, acciones);
       return card;
     }
 
@@ -272,24 +391,134 @@
       const favoritos = getData(favoritosKey);
       const filtroCategoria = categoriaFiltro.value;
       const query = buscador.value.toLowerCase();
+
       let mostrar = videos;
+
       if (query !== "") {
-        mostrar = mostrar.filter(v => v.videoNombre.toLowerCase().includes(query) || v.actrices.some(a => a.toLowerCase().includes(query)) || v.categorias.some(c => c.toLowerCase().includes(query)));
+        mostrar = mostrar.filter(v =>
+          v.videoNombre.toLowerCase().includes(query) ||
+          (v.actriz && v.actriz.toLowerCase().includes(query)) ||
+          v.categoria.toLowerCase().includes(query)
+        );
       }
-      if (filtroCategoria !== "") mostrar = mostrar.filter(v => v.categorias.includes(filtroCategoria));
-      else if (query === "" && aleatorio) mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
+
+      if (filtroCategoria !== "") {
+        mostrar = mostrar.filter(v => v.categoria === filtroCategoria);
+      } else if (query === "" && aleatorio) {
+        mostrar = videos.sort(() => 0.5 - Math.random()).slice(0, 15);
+      }
+
       galeria.innerHTML = '';
-      mostrar.forEach(video => galeria.appendChild(crearCard(video, favoritos)));
+      mostrar.forEach(video => {
+        galeria.appendChild(crearCard(video, favoritos));
+      });
     }
 
-    function filtrarVideos() { cargarVideos(false); }
+    function filtrarVideos() {
+      cargarVideos(false);
+    }
 
-    function cargarDatos() {
-      actualizarSelect(document.getElementById('actrizSelect'), getData(actoresKey));
-      actualizarSelect(document.getElementById('categoriaSelect'), getData(categoriasKey));
-      actualizarSelect(document.getElementById('carpetaSelect'), getData(carpetasKey));
-      actualizarSelect(categoriaFiltro, getData(categoriasKey), true);
-      cargarVideos(true);
+    function cargarFavoritos() {
+      const favoritos = getData(favoritosKey);
+      const videos = getData(videosKey).filter(v => favoritos.includes(v.videoUrl));
+      const favoritosShorts = getData(favoritosShortsKey);
+      const shorts = getData(shortsKey).filter(s => favoritosShorts.includes(s.videoUrl));
+      
+      const contenedor = document.getElementById('galeriaFavoritos');
+      contenedor.innerHTML = '';
+      
+      videos.forEach(video => {
+        contenedor.appendChild(crearCard(video, favoritos));
+      });
+      
+      shorts.forEach(short => {
+        const card = document.createElement('div');
+        card.className = 'short-card';
+
+        const img = document.createElement('img');
+        img.src = short.imageUrl;
+        img.onclick = () => {
+          copiarEnlace(short.videoUrl);
+          window.open(short.videoUrl, '_blank');
+        };
+
+        const acciones = document.createElement('div');
+        acciones.className = 'acciones';
+        acciones.style.marginTop = '10px';
+
+        const star = document.createElement('span');
+        star.textContent = '⭐';
+        star.onclick = () => toggleFavoritoShort(short.videoUrl);
+
+        const copy = document.createElement('span');
+        copy.textContent = '📋';
+        copy.title = 'Copiar enlace';
+        copy.onclick = () => copiarEnlace(short.videoUrl);
+
+        const trash = document.createElement('span');
+        trash.textContent = '🗑️';
+        trash.onclick = () => eliminarShort(short.videoUrl);
+
+        acciones.append(star, copy, trash);
+        card.append(img, acciones);
+        contenedor.appendChild(card);
+      });
+    }
+
+    function toggleFavorito(videoUrl) {
+      let favoritos = getData(favoritosKey);
+      if (favoritos.includes(videoUrl)) {
+        favoritos = favoritos.filter(url => url !== videoUrl);
+      } else {
+        favoritos.push(videoUrl);
+      }
+      setData(favoritosKey, favoritos);
+      cargarVideos(false);
+      cargarFavoritos();
+    }
+
+    function toggleFavoritoShort(videoUrl) {
+      let favoritos = getData(favoritosShortsKey);
+      if (favoritos.includes(videoUrl)) {
+        favoritos = favoritos.filter(url => url !== videoUrl);
+      } else {
+        favoritos.push(videoUrl);
+      }
+      setData(favoritosShortsKey, favoritos);
+      cargarShorts();
+      cargarFavoritos();
+    }
+
+    function eliminarVideo(videoUrl) {
+      if (!confirm("¿Estás seguro de eliminar este video?")) return;
+      let lista = getData(videosKey);
+      lista = lista.filter(video => video.videoUrl !== videoUrl);
+      setData(videosKey, lista);
+      let favoritos = getData(favoritosKey);
+      favoritos = favoritos.filter(url => url !== videoUrl);
+      setData(favoritosKey, favoritos);
+      cargarVideos(false);
+      cargarFavoritos();
+    }
+
+    function eliminarShort(videoUrl) {
+      if (!confirm("¿Estás seguro de eliminar este short?")) return;
+      let lista = getData(shortsKey);
+      lista = lista.filter(short => short.videoUrl !== videoUrl);
+      setData(shortsKey, lista);
+      let favoritos = getData(favoritosShortsKey);
+      favoritos = favoritos.filter(url => url !== videoUrl);
+      setData(favoritosShortsKey, favoritos);
+      cargarShorts();
+      cargarFavoritos();
+    }
+
+    function copiarEnlace(videoUrl) {
+      navigator.clipboard.writeText(videoUrl).then(() => {
+        console.log("Enlace copiado");
+      }).catch(err => {
+        console.error("Error al copiar:", err);
+      });
     }
 
     function pedirContrasena() {
