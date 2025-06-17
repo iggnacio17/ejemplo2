@@ -195,8 +195,8 @@ main {
 }
 
 .actriz-imagen {
-  width: 80px;
-  height: 80px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #4CAF50;
