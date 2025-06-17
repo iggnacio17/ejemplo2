@@ -13,6 +13,7 @@
     <button onclick="mostrarTab('formularioTab')">Nuevo Video</button>
     <button onclick="mostrarTab('shortsTab')">Nuevo Short</button>
     <button onclick="mostrarTab('favoritosTab')">⭐ Favoritos</button>
+    <button onclick="window.location.href='actrices.html'">🌟 Actrices</button>
   </aside>
 
   <main>
@@ -56,5 +57,14 @@
   </main>
 
   <script src="scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!sessionStorage.getItem('autenticado')) {
+        pedirContrasena();
+      } else {
+        cargarDatos();
+      }
+    });
+  </script>
 </body>
 </html>
