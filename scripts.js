@@ -6,11 +6,44 @@ const categoriasKey = 'categorias';
 const carpetasKey = 'carpetas';
 const favoritosKey = 'favoritos';
 const favoritosShortsKey = 'favoritosShorts';
+const actricesFotosKey = 'actricesFotos';
 
 const galeria = document.getElementById('galeria');
 const galeriaShorts = document.getElementById('galeriaShorts');
+const galeriaActrices = document.getElementById('galeriaActrices');
 const buscador = document.getElementById('buscador');
 const categoriaFiltro = document.getElementById('categoriaFiltro');
+
+// Función mejorada para normalizar nombres
+function normalizarNombre(nombre) {
+  return nombre ? nombre.toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+}
+
+// Función mejorada para obtener o crear actriz
+function obtenerOCrearActriz(nombreActriz) {
+  if (!nombreActriz || nombreActriz.trim() === '') return '';
+  
+  const actrices = getData(actoresKey);
+  const nombreBuscado = normalizarNombre(nombreActriz);
+  
+  // Buscar actriz existente
+  const actrizExistente = actrices.find(a => normalizarNombre(a) === nombreBuscado);
+  
+  if (actrizExistente) {
+    return actrizExistente;
+  } else {
+    // Agregar nueva actriz
+    const nombreFormateado = nombreActriz.trim();
+    actrices.push(nombreFormateado);
+    setData(actoresKey, actrices);
+    
+    // Actualizar selectores
+    actualizarSelect(document.getElementById('actrizSelect'), actrices);
+    actualizarSelect(categoriaFiltro, getData(categoriasKey), true);
+    
+    return nombreFormateado;
+  }
+}
 
 function mostrarTab(id) {
   document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -22,6 +55,8 @@ function mostrarTab(id) {
     cargarShorts();
   } else if (id === "favoritosTab") {
     cargarFavoritos();
+  } else if (id === "actricesTab") {
+    cargarActrices();
   }
 }
 
@@ -54,21 +89,18 @@ function guardarVideo() {
     videoUrl: document.getElementById('videoUrl').value,
     imageUrl: document.getElementById('imageUrl').value,
     videoNombre: document.getElementById('videoNombre').value,
-    actriz: document.getElementById('nuevaActriz').value || document.getElementById('actrizSelect').value,
+    actriz: obtenerOCrearActriz(
+      document.getElementById('nuevaActriz').value || document.getElementById('actrizSelect').value
+    ),
     categoria: document.getElementById('nuevaCategoria').value || document.getElementById('categoriaSelect').value,
     carpeta: document.getElementById('nuevaCarpeta').value || document.getElementById('carpetaSelect').value
   };
 
   if (!video.videoUrl || !video.imageUrl || !video.videoNombre) return alert("Todos los campos son obligatorios");
 
-  const actrices = getData(actoresKey);
   const categorias = getData(categoriasKey);
   const carpetas = getData(carpetasKey);
 
-  if (video.actriz && !actrices.includes(video.actriz)) {
-    actrices.push(video.actriz);
-    setData(actoresKey, actrices);
-  }
   if (video.categoria && !categorias.includes(video.categoria)) {
     categorias.push(video.categoria);
     setData(categoriasKey, categorias);
@@ -102,6 +134,34 @@ function guardarShort() {
   document.getElementById('shortUrl').value = '';
   document.getElementById('shortImageUrl').value = '';
   cargarShorts();
+}
+
+function guardarActrizFoto() {
+  const nombre = document.getElementById('nuevaActrizFoto').value;
+  const fotoUrl = document.getElementById('fotoActrizUrl').value;
+
+  if (!nombre || !fotoUrl) return alert("Ambos campos son obligatorios");
+
+  // Normalizar nombre y verificar existencia
+  const nombreActriz = obtenerOCrearActriz(nombre);
+  
+  // Guardar foto (actualizar si ya existe)
+  const actricesFotos = getData(actricesFotosKey);
+  const index = actricesFotos.findIndex(a => normalizarNombre(a.nombre) === normalizarNombre(nombreActriz));
+  
+  if (index >= 0) {
+    actricesFotos[index].fotoUrl = fotoUrl; // Actualizar foto existente
+  } else {
+    actricesFotos.push({ nombre: nombreActriz, fotoUrl }); // Agregar nueva
+  }
+  
+  setData(actricesFotosKey, actricesFotos);
+  
+  // Limpiar y actualizar
+  document.getElementById('nuevaActrizFoto').value = '';
+  document.getElementById('fotoActrizUrl').value = '';
+  cargarActrices();
+  actualizarSelect(document.getElementById('actrizSelect'), getData(actoresKey));
 }
 
 function cargarDatos() {
@@ -152,6 +212,72 @@ function cargarShorts() {
   });
 }
 
+function cargarActrices() {
+  const actricesFotos = getData(actricesFotosKey);
+  const todosVideos = getData(videosKey);
+  galeriaActrices.innerHTML = '';
+
+  actricesFotos.forEach(actriz => {
+    // Contar videos de ESTA actriz (comparación exacta normalizada)
+    const cantidad = todosVideos.filter(v => 
+      v.actriz && normalizarNombre(v.actriz) === normalizarNombre(actriz.nombre)
+    ).length;
+
+    const card = document.createElement('div');
+    card.className = 'actriz-card';
+    card.onclick = () => filtrarPorActriz(actriz.nombre);
+
+    const img = document.createElement('img');
+    img.className = 'actriz-foto';
+    img.src = actriz.fotoUrl;
+    img.alt = actriz.nombre;
+    img.classList.add(cantidad > 0 ? 'actriz-existe' : 'actriz-nueva');
+
+    const nombre = document.createElement('div');
+    nombre.className = 'actriz-nombre';
+    nombre.textContent = actriz.nombre;
+    
+    const contador = document.createElement('div');
+    contador.className = 'actriz-contador';
+    contador.textContent = `${cantidad} video${cantidad !== 1 ? 's' : ''}`;
+
+    card.append(img, nombre, contador);
+    galeriaActrices.appendChild(card);
+  });
+}
+
+function filtrarPorActriz(nombreActriz) {
+  if (!nombreActriz) return;
+  
+  // Limpiar otros filtros
+  buscador.value = '';
+  categoriaFiltro.value = '';
+  
+  // Obtener todos los videos
+  const todosVideos = getData(videosKey);
+  const nombreBuscado = normalizarNombre(nombreActriz);
+  
+  // Filtrar videos de ESTA actriz (comparación normalizada)
+  const videosFiltrados = todosVideos.filter(video => 
+    video.actriz && normalizarNombre(video.actriz) === nombreBuscado
+  );
+
+  // Mostrar resultados
+  galeria.innerHTML = '';
+  const favoritos = getData(favoritosKey);
+  
+  if (videosFiltrados.length === 0) {
+    galeria.innerHTML = `<p class="sin-resultados">No hay videos de ${nombreActriz}</p>`;
+  } else {
+    videosFiltrados.forEach(video => {
+      galeria.appendChild(crearCard(video, favoritos));
+    });
+  }
+  
+  // Cambiar a la pestaña de galería
+  mostrarTab('galeriaTab');
+}
+
 function crearCard(video, favoritos) {
   const card = document.createElement('div');
   card.className = 'video-card';
@@ -191,8 +317,6 @@ function crearCard(video, favoritos) {
   return card;
 }
 
-// [Resto del código permanece igual hasta la función cargarVideos...]
-
 function cargarVideos(aleatorio = false) {
   const videos = getData(videosKey);
   const favoritos = getData(favoritosKey);
@@ -202,16 +326,13 @@ function cargarVideos(aleatorio = false) {
   let mostrar = videos;
 
   if (query !== "") {
-    // Buscar en tres categorías por separado
     const enTitulo = mostrar.filter(v => v.videoNombre.toLowerCase().includes(query));
     const enCategoria = mostrar.filter(v => v.categoria.toLowerCase().includes(query));
     const enActriz = mostrar.filter(v => v.actriz && v.actriz.toLowerCase().includes(query));
 
-    // Eliminar duplicados y ordenar por relevancia (primero título, luego categoría, luego actriz)
     const resultadosUnicos = [];
     const idsAgregados = new Set();
 
-    // Agregar primero los que coinciden en título
     enTitulo.forEach(video => {
       if (!idsAgregados.has(video.videoUrl)) {
         resultadosUnicos.push(video);
@@ -219,7 +340,6 @@ function cargarVideos(aleatorio = false) {
       }
     });
 
-    // Luego los que coinciden en categoría
     enCategoria.forEach(video => {
       if (!idsAgregados.has(video.videoUrl)) {
         resultadosUnicos.push(video);
@@ -227,7 +347,6 @@ function cargarVideos(aleatorio = false) {
       }
     });
 
-    // Finalmente los que coinciden en actriz
     enActriz.forEach(video => {
       if (!idsAgregados.has(video.videoUrl)) {
         resultadosUnicos.push(video);
@@ -249,8 +368,6 @@ function cargarVideos(aleatorio = false) {
     galeria.appendChild(crearCard(video, favoritos));
   });
 }
-
-// [Resto del código permanece exactamente igual...]
 
 function filtrarVideos() {
   cargarVideos(false);
@@ -349,6 +466,21 @@ function eliminarShort(videoUrl) {
   setData(favoritosShortsKey, favoritos);
   cargarShorts();
   cargarFavoritos();
+}
+
+function eliminarActriz(nombreActriz) {
+  if (!confirm(`¿Estás seguro de eliminar a ${nombreActriz} y todas sus fotos?`)) return;
+  
+  let actricesFotos = getData(actricesFotosKey);
+  actricesFotos = actricesFotos.filter(a => normalizarNombre(a.nombre) !== normalizarNombre(nombreActriz));
+  setData(actricesFotosKey, actricesFotos);
+  
+  let actrices = getData(actoresKey);
+  actrices = actrices.filter(a => normalizarNombre(a) !== normalizarNombre(nombreActriz));
+  setData(actoresKey, actrices);
+  
+  cargarActrices();
+  actualizarSelect(document.getElementById('actrizSelect'), actrices);
 }
 
 function copiarEnlace(videoUrl) {
