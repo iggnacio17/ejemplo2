@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🎥 Gestor de Videos</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -13,6 +13,7 @@
     <button onclick="mostrarTab('formularioTab')">Nuevo Video</button>
     <button onclick="mostrarTab('shortsTab')">Nuevo Short</button>
     <button onclick="mostrarTab('favoritosTab')">⭐ Favoritos</button>
+    <button onclick="mostrarTab('actricesTab')">🌟 Actrices</button>
   </aside>
 
   <main>
@@ -28,9 +29,9 @@
 
     <div class="tab" id="formularioTab">
       <div class="formulario">
-        <input type="text" id="videoUrl" placeholder="Enlace del video">
-        <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
-        <input type="text" id="videoNombre" placeholder="Nombre del video">
+        <input type="text" id="videoUrl" placeholder="Enlace del video" required>
+        <input type="text" id="imageUrl" placeholder="Enlace de la imagen" required>
+        <input type="text" id="videoNombre" placeholder="Nombre del video" required>
         <input type="text" id="nuevaActriz" placeholder="Agregar actriz">
         <select id="actrizSelect"></select>
         <input type="text" id="nuevaCategoria" placeholder="Agregar categoría">
@@ -43,15 +44,25 @@
 
     <div class="tab" id="shortsTab">
       <div class="formulario">
-        <input type="text" id="shortUrl" placeholder="Enlace del short">
-        <input type="text" id="shortImageUrl" placeholder="Enlace de la imagen">
+        <input type="text" id="shortUrl" placeholder="Enlace del short" required>
+        <input type="text" id="shortImageUrl" placeholder="Enlace de la imagen" required>
         <button onclick="guardarShort()">Guardar Short</button>
       </div>
-      <div class="galeria" id="galeriaShorts" style="margin-top: 20px;"></div>
+      <div class="galeria" id="galeriaShorts"></div>
     </div>
 
     <div class="tab" id="favoritosTab">
       <div class="galeria" id="galeriaFavoritos"></div>
+    </div>
+
+    <div class="tab" id="actricesTab">
+      <div class="formulario">
+        <input type="text" id="nuevaActrizFoto" placeholder="Nombre exacto de la actriz" required>
+        <input type="text" id="fotoActrizUrl" placeholder="URL de la foto (cuadrada)" required>
+        <button onclick="guardarActrizFoto()">Guardar Actriz</button>
+        <p class="nota">Nota: Usa el mismo nombre que en los videos</p>
+      </div>
+      <div class="galeria-actrices" id="galeriaActrices"></div>
     </div>
   </main>
 
