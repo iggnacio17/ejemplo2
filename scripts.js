@@ -200,11 +200,20 @@ function cargarVideos(aleatorio = false) {
   let mostrar = videos;
 
   if (query !== "") {
-    mostrar = mostrar.filter(v =>
-      v.videoNombre.toLowerCase().includes(query) ||
-      (v.actriz && v.actriz.toLowerCase().includes(query)) ||
-      v.categoria.toLowerCase().includes(query)
-    );
+    // Primero busca en títulos
+    let resultados = mostrar.filter(v => v.videoNombre.toLowerCase().includes(query));
+    
+    // Si no hay resultados en títulos, busca en actrices
+    if (resultados.length === 0) {
+      resultados = mostrar.filter(v => v.actriz && v.actriz.toLowerCase().includes(query));
+    }
+    
+    // Si no hay resultados en actrices, busca en categorías
+    if (resultados.length === 0) {
+      resultados = mostrar.filter(v => v.categoria.toLowerCase().includes(query));
+    }
+    
+    mostrar = resultados;
   }
 
   if (filtroCategoria !== "") {
