@@ -14,33 +14,28 @@ const galeriaActrices = document.getElementById('galeriaActrices');
 const buscador = document.getElementById('buscador');
 const categoriaFiltro = document.getElementById('categoriaFiltro');
 
-// Función mejorada para normalizar nombres
+// Función para normalizar nombres (elimina espacios y convierte a minúsculas)
 function normalizarNombre(nombre) {
-  return nombre ? nombre.toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+  return nombre.trim().toLowerCase();
 }
 
-// Función mejorada para obtener o crear actriz
+// Función para obtener o crear actriz (devuelve el nombre exacto guardado)
 function obtenerOCrearActriz(nombreActriz) {
-  if (!nombreActriz || nombreActriz.trim() === '') return '';
+  if (!nombreActriz) return '';
   
   const actrices = getData(actoresKey);
   const nombreBuscado = normalizarNombre(nombreActriz);
   
-  // Buscar actriz existente
+  // Buscar actriz existente (insensible a mayúsculas/espacios)
   const actrizExistente = actrices.find(a => normalizarNombre(a) === nombreBuscado);
   
   if (actrizExistente) {
-    return actrizExistente;
+    return actrizExistente; // Devuelve el nombre exacto guardado
   } else {
-    // Agregar nueva actriz
+    // Agregar nueva actriz (guardando el nombre formateado)
     const nombreFormateado = nombreActriz.trim();
     actrices.push(nombreFormateado);
     setData(actoresKey, actrices);
-    
-    // Actualizar selectores
-    actualizarSelect(document.getElementById('actrizSelect'), actrices);
-    actualizarSelect(categoriaFiltro, getData(categoriasKey), true);
-    
     return nombreFormateado;
   }
 }
@@ -247,19 +242,14 @@ function cargarActrices() {
 }
 
 function filtrarPorActriz(nombreActriz) {
-  if (!nombreActriz) return;
-  
   // Limpiar otros filtros
   buscador.value = '';
   categoriaFiltro.value = '';
   
-  // Obtener todos los videos
-  const todosVideos = getData(videosKey);
-  const nombreBuscado = normalizarNombre(nombreActriz);
-  
-  // Filtrar videos de ESTA actriz (comparación normalizada)
-  const videosFiltrados = todosVideos.filter(video => 
-    video.actriz && normalizarNombre(video.actriz) === nombreBuscado
+  // Obtener videos FILTRADOS por actriz exacta (comparación normalizada)
+  const videos = getData(videosKey);
+  const videosFiltrados = videos.filter(v => 
+    v.actriz && normalizarNombre(v.actriz) === normalizarNombre(nombreActriz)
   );
 
   // Mostrar resultados
@@ -274,7 +264,6 @@ function filtrarPorActriz(nombreActriz) {
     });
   }
   
-  // Cambiar a la pestaña de galería
   mostrarTab('galeriaTab');
 }
 
