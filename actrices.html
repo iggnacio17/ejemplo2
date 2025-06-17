@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌟 Actrices</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside>
+    <h1>🌟 Actrices</h1>
+    <button onclick="window.location.href='index.html'">🏠 Volver a Videos</button>
+    <button onclick="agregarNuevaActriz()">➕ Nueva Actriz</button>
+  </aside>
+
+  <main>
+    <div class="galeria-actrices" id="galeriaActrices"></div>
+  </main>
+
+  <script src="scripts.js"></script>
+  <script>
+    function agregarNuevaActriz() {
+      const nombre = prompt("Nombre de la nueva actriz:");
+      if (nombre) {
+        const imagenUrl = prompt("URL de la imagen de la actriz (opcional):");
+        let actrices = getData(actoresKey);
+        
+        const existe = actrices.some(a => 
+          (typeof a === 'string' && a === nombre) || 
+          (typeof a === 'object' && a.nombre === nombre)
+        );
+        
+        if (!existe) {
+          if (imagenUrl) {
+            actrices.push({ nombre, imagenUrl });
+          } else {
+            actrices.push(nombre);
+          }
+          setData(actoresKey, actrices);
+          cargarActrices();
+        } else {
+          alert("Esta actriz ya existe");
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!sessionStorage.getItem('autenticado')) {
+        window.location.href = 'index.html';
+      } else {
+        cargarActrices();
+      }
+    });
+  </script>
+</body>
+</html>
