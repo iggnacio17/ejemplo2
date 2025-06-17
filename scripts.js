@@ -191,6 +191,8 @@ function crearCard(video, favoritos) {
   return card;
 }
 
+// [Resto del código permanece igual hasta la función cargarVideos...]
+
 function cargarVideos(aleatorio = false) {
   const videos = getData(videosKey);
   const favoritos = getData(favoritosKey);
@@ -200,20 +202,40 @@ function cargarVideos(aleatorio = false) {
   let mostrar = videos;
 
   if (query !== "") {
-    // Primero busca en títulos
-    let resultados = mostrar.filter(v => v.videoNombre.toLowerCase().includes(query));
-    
-    // Si no hay resultados en títulos, busca en actrices
-    if (resultados.length === 0) {
-      resultados = mostrar.filter(v => v.actriz && v.actriz.toLowerCase().includes(query));
-    }
-    
-    // Si no hay resultados en actrices, busca en categorías
-    if (resultados.length === 0) {
-      resultados = mostrar.filter(v => v.categoria.toLowerCase().includes(query));
-    }
-    
-    mostrar = resultados;
+    // Buscar en tres categorías por separado
+    const enTitulo = mostrar.filter(v => v.videoNombre.toLowerCase().includes(query));
+    const enCategoria = mostrar.filter(v => v.categoria.toLowerCase().includes(query));
+    const enActriz = mostrar.filter(v => v.actriz && v.actriz.toLowerCase().includes(query));
+
+    // Eliminar duplicados y ordenar por relevancia (primero título, luego categoría, luego actriz)
+    const resultadosUnicos = [];
+    const idsAgregados = new Set();
+
+    // Agregar primero los que coinciden en título
+    enTitulo.forEach(video => {
+      if (!idsAgregados.has(video.videoUrl)) {
+        resultadosUnicos.push(video);
+        idsAgregados.add(video.videoUrl);
+      }
+    });
+
+    // Luego los que coinciden en categoría
+    enCategoria.forEach(video => {
+      if (!idsAgregados.has(video.videoUrl)) {
+        resultadosUnicos.push(video);
+        idsAgregados.add(video.videoUrl);
+      }
+    });
+
+    // Finalmente los que coinciden en actriz
+    enActriz.forEach(video => {
+      if (!idsAgregados.has(video.videoUrl)) {
+        resultadosUnicos.push(video);
+        idsAgregados.add(video.videoUrl);
+      }
+    });
+
+    mostrar = resultadosUnicos;
   }
 
   if (filtroCategoria !== "") {
@@ -227,6 +249,8 @@ function cargarVideos(aleatorio = false) {
     galeria.appendChild(crearCard(video, favoritos));
   });
 }
+
+// [Resto del código permanece exactamente igual...]
 
 function filtrarVideos() {
   cargarVideos(false);
