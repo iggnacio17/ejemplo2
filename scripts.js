@@ -41,7 +41,12 @@ function actualizarSelect(select, data, incluirTodas = false) {
     opt.textContent = '📂 Todas las categorías';
     select.appendChild(opt);
   }
-  data.forEach(item => {
+  
+  // Filtramos solo los nombres si son objetos
+  const nombres = data.map(item => typeof item === 'object' ? item.nombre : item);
+  const unicos = [...new Set(nombres)]; // Eliminamos duplicados
+  
+  unicos.forEach(item => {
     const option = document.createElement('option');
     option.value = item;
     option.textContent = item;
@@ -65,14 +70,23 @@ function guardarVideo() {
   const categorias = getData(categoriasKey);
   const carpetas = getData(carpetasKey);
 
-  if (video.actriz && !actrices.includes(video.actriz)) {
-    actrices.push(video.actriz);
-    setData(actoresKey, actrices);
+  if (video.actriz) {
+    const existe = actrices.some(a => 
+      (typeof a === 'string' && a === video.actriz) || 
+      (typeof a === 'object' && a.nombre === video.actriz)
+    );
+    
+    if (!existe) {
+      actrices.push(video.actriz);
+      setData(actoresKey, actrices);
+    }
   }
+  
   if (video.categoria && !categorias.includes(video.categoria)) {
     categorias.push(video.categoria);
     setData(categoriasKey, categorias);
   }
+  
   if (video.carpeta && !carpetas.includes(video.carpeta)) {
     carpetas.push(video.carpeta);
     setData(carpetasKey, carpetas);
@@ -109,7 +123,15 @@ function cargarDatos() {
   actualizarSelect(document.getElementById('categoriaSelect'), getData(categoriasKey));
   actualizarSelect(document.getElementById('carpetaSelect'), getData(carpetasKey));
   actualizarSelect(categoriaFiltro, getData(categoriasKey), true);
-  cargarVideos(true);
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const actrizParam = urlParams.get('actriz');
+  
+  if (actrizParam) {
+    buscador.value = actrizParam;
+  }
+  
+  cargarVideos(!actrizParam);
 }
 
 function cargarShorts() {
@@ -168,7 +190,23 @@ function crearCard(video, favoritos) {
   nombre.textContent = video.videoNombre;
 
   const desc = document.createElement('p');
-  desc.textContent = `🎭 ${video.actriz} | 🗂️ ${video.categoria} | 📁 ${video.carpeta}`;
+  
+  const actrizSpan = document.createElement('span');
+  actrizSpan.textContent = `🎭 ${video.actriz}`;
+  actrizSpan.style.cursor = 'pointer';
+  actrizSpan.style.textDecoration = 'underline';
+  actrizSpan.onclick = (e) => {
+    e.stopPropagation();
+    buscarPorActriz(video.actriz);
+  };
+
+  const categoriaSpan = document.createElement('span');
+  categoriaSpan.textContent = ` | 🗂️ ${video.categoria}`;
+
+  const carpetaSpan = document.createElement('span');
+  carpetaSpan.textContent = ` | 📁 ${video.carpeta}`;
+
+  desc.append(actrizSpan, categoriaSpan, carpetaSpan);
 
   const acciones = document.createElement('div');
   acciones.className = 'acciones';
@@ -191,6 +229,11 @@ function crearCard(video, favoritos) {
   return card;
 }
 
+function buscarPorActriz(actriz) {
+  buscador.value = actriz;
+  cargarVideos(false);
+}
+
 function cargarVideos(aleatorio = false) {
   const videos = getData(videosKey);
   const favoritos = getData(favoritosKey);
@@ -200,15 +243,12 @@ function cargarVideos(aleatorio = false) {
   let mostrar = videos;
 
   if (query !== "") {
-    // Primero busca en títulos
     let resultados = mostrar.filter(v => v.videoNombre.toLowerCase().includes(query));
     
-    // Si no hay resultados en títulos, busca en actrices
     if (resultados.length === 0) {
       resultados = mostrar.filter(v => v.actriz && v.actriz.toLowerCase().includes(query));
     }
     
-    // Si no hay resultados en actrices, busca en categorías
     if (resultados.length === 0) {
       resultados = mostrar.filter(v => v.categoria.toLowerCase().includes(query));
     }
@@ -341,8 +381,160 @@ function pedirContrasena() {
     alert("Contraseña incorrecta. Acceso denegado.");
     document.body.innerHTML = "<h1 style='color: red; text-align:center;'>Acceso Denegado</h1>";
   } else {
-    cargarDatos();
+    sessionStorage.setItem('autenticado', 'true');
+    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+      cargarDatos();
+    }
   }
 }
 
-pedirContrasena();
+function cargarActrices() {
+  const actrices = getData(actoresKey);
+  const galeria = document.getElementById('galeriaActrices');
+  galeria.innerHTML = '';
+
+  actrices.forEach(actriz => {
+    const card = document.createElement('div');
+    card.className = 'actriz-card';
+
+    const img = document.createElement('img');
+    img.className = 'actriz-imagen';
+    if (typeof actriz === 'object' && actriz.imagenUrl) {
+      img.src = actriz.imagenUrl;
+    } else {
+      img.src = 'https://i.imgur.com/JQWUQfH.png'; // Imagen por defecto
+    }
+    img.alt = typeof actriz === 'object' ? actriz.nombre : actriz;
+    
+    const nombre = document.createElement('div');
+    nombre.className = 'actriz-nombre';
+    nombre.textContent = typeof actriz === 'object' ? actriz.nombre : actriz;
+    
+    const acciones = document.createElement('div');
+    acciones.className = 'acciones-actriz';
+    
+    const cambiarImg = document.createElement('span');
+    cambiarImg.textContent = '🖼️';
+    cambiarImg.title = 'Cambiar imagen';
+    cambiarImg.onclick = (e) => {
+      e.stopPropagation();
+      cambiarImagenActriz(actriz);
+    };
+    
+    const editar = document.createElement('span');
+    editar.textContent = '✏️';
+    editar.title = 'Editar actriz';
+    editar.onclick = (e) => {
+      e.stopPropagation();
+      editarActriz(actriz);
+    };
+    
+    const eliminar = document.createElement('span');
+    eliminar.textContent = '🗑️';
+    eliminar.title = 'Eliminar actriz';
+    eliminar.onclick = (e) => {
+      e.stopPropagation();
+      eliminarActriz(actriz);
+    };
+    
+    acciones.append(cambiarImg, editar, eliminar);
+    card.append(img, nombre, acciones);
+    
+    card.onclick = () => {
+      const nombreActriz = typeof actriz === 'object' ? actriz.nombre : actriz;
+      window.location.href = `index.html?actriz=${encodeURIComponent(nombreActriz)}`;
+    };
+    
+    galeria.appendChild(card);
+  });
+}
+
+function cambiarImagenActriz(actriz) {
+  const nombreActriz = typeof actriz === 'object' ? actriz.nombre : actriz;
+  const imagenActual = typeof actriz === 'object' ? actriz.imagenUrl : '';
+  
+  const nuevaUrl = prompt(`Introduce la nueva URL de la imagen para ${nombreActriz}`, imagenActual || '');
+  
+  if (nuevaUrl !== null) {
+    let actrices = getData(actoresKey);
+    
+    actrices = actrices.map(a => {
+      if (typeof a === 'string') {
+        if (a === nombreActriz) {
+          return { nombre: a, imagenUrl: nuevaUrl };
+        }
+        return a;
+      } else {
+        if (a.nombre === nombreActriz) {
+          return { ...a, imagenUrl: nuevaUrl };
+        }
+        return a;
+      }
+    });
+    
+    setData(actoresKey, actrices);
+    cargarActrices();
+  }
+}
+
+function editarActriz(actriz) {
+  const nombreActual = typeof actriz === 'object' ? actriz.nombre : actriz;
+  const nuevoNombre = prompt("Nuevo nombre para la actriz:", nombreActual);
+  
+  if (nuevoNombre && nuevoNombre !== nombreActual) {
+    let actrices = getData(actoresKey);
+    
+    actrices = actrices.map(a => {
+      if (typeof a === 'string') {
+        if (a === nombreActual) {
+          return nuevoNombre;
+        }
+        return a;
+      } else {
+        if (a.nombre === nombreActual) {
+          return { ...a, nombre: nuevoNombre };
+        }
+        return a;
+      }
+    });
+    
+    // Actualizar en videos
+    let videos = getData(videosKey);
+    videos = videos.map(video => {
+      if (video.actriz === nombreActual) {
+        return { ...video, actriz: nuevoNombre };
+      }
+      return video;
+    });
+    
+    setData(actoresKey, actrices);
+    setData(videosKey, videos);
+    cargarActrices();
+    
+    if (window.location.pathname.includes('index.html')) {
+      cargarDatos();
+    }
+  }
+}
+
+function eliminarActriz(actriz) {
+  const nombre = typeof actriz === 'object' ? actriz.nombre : actriz;
+  
+  if (!confirm(`¿Estás seguro de eliminar a ${nombre}? Esto no eliminará los videos asociados.`)) return;
+  
+  let actrices = getData(actoresKey);
+  actrices = actrices.filter(a => {
+    if (typeof a === 'string') {
+      return a !== nombre;
+    } else {
+      return a.nombre !== nombre;
+    }
+  });
+  
+  setData(actoresKey, actrices);
+  cargarActrices();
+  
+  if (window.location.pathname.includes('index.html')) {
+    cargarDatos();
+  }
+}
