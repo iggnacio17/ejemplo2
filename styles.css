@@ -1,37 +1,44 @@
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #1e1e1e;
   color: #ffffff;
-  margin: 0;
   display: flex;
+  min-height: 100vh;
 }
 
 aside {
-  width: 200px;
+  width: 220px;
   background: #2c2c2c;
   padding: 20px 10px;
-  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 aside h1 {
-  font-size: 18px;
+  font-size: 1.2rem;
   text-align: center;
   margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #444;
 }
 
 aside button {
   width: 100%;
-  margin: 5px 0;
+  margin: 6px 0;
   padding: 10px;
   background-color: #4CAF50;
+  color: white;
   border: none;
   border-radius: 5px;
-  color: white;
   cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
 }
 
 aside button:hover {
@@ -41,20 +48,7 @@ aside button:hover {
 main {
   flex: 1;
   padding: 20px;
-}
-
-.filtros {
-  margin-bottom: 20px;
-}
-
-.filtros input,
-.filtros select {
-  width: 90%;
-  max-width: 400px;
-  margin: 5px 0;
-  padding: 8px;
-  border-radius: 4px;
-  border: none;
+  overflow-y: auto;
 }
 
 .tab {
@@ -65,71 +59,204 @@ main {
   display: block;
 }
 
+.filtros {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filtros input,
+.filtros select {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #444;
+  background: #333;
+  color: white;
+  width: 100%;
+  max-width: 400px;
+}
+
 .galeria {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
 }
 
 .video-card {
   background: #3a3a3a;
   border-radius: 10px;
-  padding: 10px;
-  text-align: center;
+  overflow: hidden;
+  transition: transform 0.3s;
+}
+
+.video-card:hover {
+  transform: translateY(-5px);
 }
 
 .video-card img {
   width: 100%;
-  height: auto;
-  max-height: 300px;
+  height: 180px;
   object-fit: cover;
-  border-radius: 10px;
   cursor: pointer;
+}
+
+.video-info {
+  padding: 15px;
 }
 
 .video-name {
   font-weight: bold;
-  font-size: 16px;
-  margin-top: 8px;
+  margin-bottom: 8px;
+  font-size: 1rem;
 }
 
 .video-card p {
-  font-size: 13px;
-  margin: 6px 0;
+  font-size: 0.8rem;
+  color: #bbb;
+  margin-bottom: 5px;
+}
+
+.acciones {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  gap: 15px;
 }
 
 .acciones span {
-  margin: 0 5px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 1.2rem;
+  transition: transform 0.2s;
 }
 
-.formulario input, .formulario select, .formulario button {
-  display: block;
-  margin: 8px 0;
-  width: 90%;
-  max-width: 400px;
-  padding: 8px;
+.acciones span:hover {
+  transform: scale(1.2);
 }
 
 .formulario {
   background: #2c2c2c;
   padding: 20px;
   border-radius: 10px;
+  max-width: 500px;
+  margin-bottom: 20px;
 }
 
-.short-card {
+.formulario input,
+.formulario select,
+.formulario button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 5px;
+  border: 1px solid #444;
+  background: #333;
+  color: white;
+}
+
+.formulario button {
+  background: #4CAF50;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.formulario button:hover {
+  background: #45a049;
+}
+
+.nota {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-top: 10px;
+}
+
+.galeria-actrices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.actriz-card {
   background: #3a3a3a;
   border-radius: 10px;
-  padding: 10px;
-  text-align: center;
-  height: 100%;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.3s;
 }
 
-.short-card img {
-  width: 100%;
-  height: 300px;
+.actriz-card:hover {
+  transform: scale(1.05);
+}
+
+.actriz-imagen {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
   object-fit: cover;
-  border-radius: 10px;
+  border: 3px solid #4CAF50;
+  margin-bottom: 10px;
+}
+
+.actriz-nombre {
+  text-align: center;
+  font-size: 0.9rem;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acciones-actriz {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.acciones-actriz span {
   cursor: pointer;
+  font-size: 1.2rem;
+  transition: transform 0.2s;
+}
+
+.acciones-actriz span:hover {
+  transform: scale(1.2);
+}
+
+.sin-resultados {
+  text-align: center;
+  color: #aaa;
+  padding: 40px;
+  grid-column: 1/-1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+  }
+  
+  aside {
+    width: 100%;
+    padding: 10px;
+  }
+  
+  .galeria {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .galeria-actrices {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .actriz-imagen {
+    width: 60px;
+    height: 60px;
+  }
 }
