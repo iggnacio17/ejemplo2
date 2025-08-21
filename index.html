@@ -17,6 +17,12 @@
   </aside>
 
   <main>
+    <div class="data-controls">
+      <button onclick="exportData()">📤 Exportar datos</button>
+      <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+      <button onclick="document.getElementById('importFile').click()">📥 Importar datos</button>
+    </div>
+
     <div class="tab active" id="galeriaTab">
       <div class="filtros">
         <input type="text" id="buscador" placeholder="Buscar por nombre, actriz o categoría" oninput="filtrarVideos()">
