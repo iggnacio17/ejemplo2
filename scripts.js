@@ -2,15 +2,18 @@
 const PASSWORD = "finnCracK12@";
 const videosKey = 'videos';
 const shortsKey = 'shorts';
+const imagenesKey = 'imagenes';
 const actoresKey = 'actrices';
 const categoriasKey = 'categorias';
 const carpetasKey = 'carpetas';
 const favoritosKey = 'favoritos';
 const favoritosShortsKey = 'favoritosShorts';
+const favoritosImagenesKey = 'favoritosImagenes';
 
 // ====== Referencias DOM (pueden ser null en actrices.html) ======
 const galeria = document.getElementById('galeria');
 const galeriaShorts = document.getElementById('galeriaShorts');
+const galeriaImagenes = document.getElementById('galeriaImagenes');
 const buscador = document.getElementById('buscador');
 const categoriaFiltro = document.getElementById('categoriaFiltro');
 
@@ -28,6 +31,8 @@ function mostrarTab(id) {
     cargarVideos(true);
   } else if (id === "shortsTab") {
     cargarShorts();
+  } else if (id === "imagenesTab") {
+    cargarImagenes();
   } else if (id === "favoritosTab") {
     cargarFavoritos();
   }
@@ -117,6 +122,22 @@ function guardarShort() {
   cargarShorts();
 }
 
+function guardarImagen() {
+  const imagenUrl = document.getElementById('imagenUrl').value.trim();
+  if (!imagenUrl) { alert("El campo es obligatorio"); return; }
+
+  const lista = getData(imagenesKey);
+  if (lista.some(img => img === imagenUrl)) {
+    alert("Esta imagen ya existe (mismo enlace)."); return;
+  }
+
+  lista.push(imagenUrl);
+  setData(imagenesKey, lista);
+
+  document.getElementById('imagenUrl').value = '';
+  cargarImagenes();
+}
+
 // ====== Carga inicial ======
 function cargarDatos() {
   actualizarSelect(document.getElementById('actrizSelect'), getData(actoresKey));
@@ -177,6 +198,61 @@ function cargarShorts() {
     acciones.append(star, edit, copy, trash);
     card.append(img, acciones);
     galeriaShorts.appendChild(card);
+  });
+}
+
+// ====== Galería Imágenes ======
+function cargarImagenes() {
+  if (!galeriaImagenes) return;
+  const imagenes = getData(imagenesKey);
+  const favoritos = getData(favoritosImagenesKey);
+
+  galeriaImagenes.innerHTML = '';
+
+  if (imagenes.length === 0) {
+    const vacio = document.createElement('div');
+    vacio.className = 'sin-resultados';
+    vacio.textContent = 'No hay imágenes guardadas';
+    galeriaImagenes.appendChild(vacio);
+    return;
+  }
+
+  imagenes.forEach(imagenUrl => {
+    const card = document.createElement('div');
+    card.className = 'imagen-card';
+
+    const img = document.createElement('img');
+    img.src = imagenUrl;
+    img.onclick = () => {
+      window.open(imagenUrl, '_blank');
+    };
+
+    const acciones = document.createElement('div');
+    acciones.className = 'acciones-imagen';
+
+    const star = document.createElement('span');
+    star.textContent = favoritos.includes(imagenUrl) ? '⭐' : '☆';
+    star.title = 'Favorito';
+    star.onclick = () => toggleFavoritoImagen(imagenUrl);
+
+    const view = document.createElement('span');
+    view.textContent = '👁️';
+    view.title = 'Ver imagen';
+    view.onclick = () => window.open(imagenUrl, '_blank');
+
+    const copy = document.createElement('span');
+    copy.textContent = '📋';
+    copy.title = 'Copiar enlace';
+    copy.onclick = () => copiarEnlace(imagenUrl);
+
+    const trash = document.createElement('span');
+    trash.textContent = '🗑️';
+    trash.title = 'Eliminar imagen';
+    trash.onclick = () => eliminarImagen(imagenUrl);
+
+    acciones.append(star, view, copy, trash);
+    card.append(img, acciones);
+    galeriaImagenes.appendChild(card);
   });
 }
 
@@ -292,6 +368,9 @@ function cargarFavoritos() {
   const favoritosShorts = getData(favoritosShortsKey);
   const shorts = getData(shortsKey).filter(s => favoritosShorts.includes(s.videoUrl));
 
+  const favoritosImagenes = getData(favoritosImagenesKey);
+  const imagenes = getData(imagenesKey).filter(img => favoritosImagenes.includes(img));
+
   contenedor.innerHTML = '';
 
   videos.forEach(video => contenedor.appendChild(crearCard(video, favoritos)));
@@ -335,6 +414,44 @@ function cargarFavoritos() {
     card.append(img, acciones);
     contenedor.appendChild(card);
   });
+
+  imagenes.forEach(imagenUrl => {
+    const card = document.createElement('div');
+    card.className = 'imagen-card';
+
+    const img = document.createElement('img');
+    img.src = imagenUrl;
+    img.onclick = () => {
+      window.open(imagenUrl, '_blank');
+    };
+
+    const acciones = document.createElement('div');
+    acciones.className = 'acciones-imagen';
+
+    const star = document.createElement('span');
+    star.textContent = '⭐';
+    star.title = 'Quitar de favoritos';
+    star.onclick = () => toggleFavoritoImagen(imagenUrl);
+
+    const view = document.createElement('span');
+    view.textContent = '👁️';
+    view.title = 'Ver imagen';
+    view.onclick = () => window.open(imagenUrl, '_blank');
+
+    const copy = document.createElement('span');
+    copy.textContent = '📋';
+    copy.title = 'Copiar enlace';
+    copy.onclick = () => copiarEnlace(imagenUrl);
+
+    const trash = document.createElement('span');
+    trash.textContent = '🗑️';
+    trash.title = 'Eliminar imagen';
+    trash.onclick = () => eliminarImagen(imagenUrl);
+
+    acciones.append(star, view, copy, trash);
+    card.append(img, acciones);
+    contenedor.appendChild(card);
+  });
 }
 
 function toggleFavorito(videoUrl) {
@@ -352,6 +469,15 @@ function toggleFavoritoShort(videoUrl) {
   else favoritos.push(videoUrl);
   setData(favoritosShortsKey, favoritos);
   cargarShorts();
+  cargarFavoritos();
+}
+
+function toggleFavoritoImagen(imagenUrl) {
+  let favoritos = getData(favoritosImagenesKey);
+  if (favoritos.includes(imagenUrl)) favoritos = favoritos.filter(url => url !== imagenUrl);
+  else favoritos.push(imagenUrl);
+  setData(favoritosImagenesKey, favoritos);
+  cargarImagenes();
   cargarFavoritos();
 }
 
@@ -377,6 +503,18 @@ function eliminarShort(videoUrl) {
   setData(favoritosShortsKey, favoritos);
 
   cargarShorts();
+  cargarFavoritos();
+}
+
+function eliminarImagen(imagenUrl) {
+  if (!confirm("¿Estás seguro de eliminar esta imagen?")) return;
+  let lista = getData(imagenesKey).filter(img => img !== imagenUrl);
+  setData(imagenesKey, lista);
+
+  let favoritos = getData(favoritosImagenesKey).filter(url => url !== imagenUrl);
+  setData(favoritosImagenesKey, favoritos);
+
+  cargarImagenes();
   cargarFavoritos();
 }
 
@@ -576,11 +714,13 @@ function exportData() {
     _exportVersion: 1,
     videos: getData(videosKey),
     shorts: getData(shortsKey),
+    imagenes: getData(imagenesKey),
     actrices: getData(actoresKey),
     categorias: getData(categoriasKey),
     carpetas: getData(carpetasKey),
     favoritos: getData(favoritosKey),
-    favoritosShorts: getData(favoritosShortsKey)
+    favoritosShorts: getData(favoritosShortsKey),
+    favoritosImagenes: getData(favoritosImagenesKey)
   };
 
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -612,15 +752,19 @@ function importData(event) {
       const mergedShorts = mergeShorts(getData(shortsKey), Array.isArray(imported.shorts) ? imported.shorts : []);
       setData(shortsKey, mergedShorts);
 
-      // 3) Merge actrices (por nombre). Si una versión tiene imagenUrl, se conserva.
+      // 3) Merge imágenes (strings)
+      const mergedImagenes = mergeStrings(getData(imagenesKey), Array.isArray(imported.imagenes) ? imported.imagenes : []);
+      setData(imagenesKey, mergedImagenes);
+
+      // 4) Merge actrices (por nombre). Si una versión tiene imagenUrl, se conserva.
       const mergedActrices = mergeActrices(getData(actoresKey), Array.isArray(imported.actrices) ? imported.actrices : []);
       setData(actoresKey, mergedActrices);
 
-      // 4) Merge categorías / carpetas (strings)
+      // 5) Merge categorías / carpetas (strings)
       setData(categoriasKey, mergeStrings(getData(categoriasKey), Array.isArray(imported.categorias) ? imported.categorias : []));
       setData(carpetasKey, mergeStrings(getData(carpetasKey), Array.isArray(imported.carpetas) ? imported.carpetas : []));
 
-      // 5) Favoritos: filtrar para que solo apunten a URLs existentes
+      // 6) Favoritos: filtrar para que solo apunten a URLs existentes
       const favV = mergeStrings(getData(favoritosKey), Array.isArray(imported.favoritos) ? imported.favoritos : [])
         .filter(u => mergedVideos.some(v => v.videoUrl === u));
       setData(favoritosKey, favV);
@@ -629,9 +773,14 @@ function importData(event) {
         .filter(u => mergedShorts.some(s => s.videoUrl === u));
       setData(favoritosShortsKey, favS);
 
+      const favI = mergeStrings(getData(favoritosImagenesKey), Array.isArray(imported.favoritosImagenes) ? imported.favoritosImagenes : [])
+        .filter(u => mergedImagenes.includes(u));
+      setData(favoritosImagenesKey, favI);
+
       // refrescar UI
       if (document.getElementById('galeria')) cargarDatos();
       if (document.getElementById('galeriaShorts')) cargarShorts();
+      if (document.getElementById('galeriaImagenes')) cargarImagenes();
       if (document.getElementById('galeriaFavoritos')) cargarFavoritos();
 
       alert("Datos importados y fusionados correctamente ✅");
