@@ -12,6 +12,7 @@
     <button onclick="mostrarTab('galeriaTab')">Galería</button>
     <button onclick="mostrarTab('formularioTab')">Nuevo Video</button>
     <button onclick="mostrarTab('shortsTab')">Nuevo Short</button>
+    <button onclick="mostrarTab('imagenesTab')">Nueva Imagen</button>
     <button onclick="mostrarTab('favoritosTab')">⭐ Favoritos</button>
     <button onclick="window.location.href='actrices.html'">🌟 Actrices</button>
   </aside>
@@ -55,6 +56,14 @@
         <button onclick="guardarShort()">Guardar Short</button>
       </div>
       <div class="galeria" id="galeriaShorts" style="margin-top: 20px;"></div>
+    </div>
+
+    <div class="tab" id="imagenesTab">
+      <div class="formulario">
+        <input type="text" id="imagenUrl" placeholder="Enlace de la imagen">
+        <button onclick="guardarImagen()">Guardar Imagen</button>
+      </div>
+      <div class="galeria-imagenes" id="galeriaImagenes" style="margin-top: 20px;"></div>
     </div>
 
     <div class="tab" id="favoritosTab">
