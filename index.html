@@ -1,85 +1,333 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🎥 Gestor de Videos</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <aside>
-    <h1>🎥 Videos</h1>
-    <button onclick="mostrarTab('galeriaTab')">Galería</button>
-    <button onclick="mostrarTab('formularioTab')">Nuevo Video</button>
-    <button onclick="mostrarTab('shortsTab')">Nuevo Short</button>
-    <button onclick="mostrarTab('imagenesTab')">Nueva Imagen</button>
-    <button onclick="mostrarTab('favoritosTab')">⭐ Favoritos</button>
-    <button onclick="window.location.href='actrices.html'">🌟 Actrices</button>
-  </aside>
-
-  <main>
-    <div class="data-controls">
-      <button onclick="exportData()">📤 Exportar datos</button>
-      <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
-      <button onclick="document.getElementById('importFile').click()">📥 Importar datos</button>
-    </div>
-
-    <div class="tab active" id="galeriaTab">
-      <div class="filtros">
-        <input type="text" id="buscador" placeholder="Buscar por nombre, actriz o categoría" oninput="filtrarVideos()">
-        <select id="categoriaFiltro" onchange="filtrarVideos()">
-          <option value="">📂 Todas las categorías</option>
-        </select>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎥 Gestor de Videos</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- SIDEBAR -->
+    <aside>
+      <div class="sidebar-logo">
+        <h1>🎥 <span class="logo-accent">VID</span>VAULT</h1>
       </div>
-      <div class="galeria" id="galeria"></div>
-    </div>
 
-    <div class="tab" id="formularioTab">
-      <div class="formulario">
-        <input type="text" id="videoUrl" placeholder="Enlace del video">
-        <input type="text" id="imageUrl" placeholder="Enlace de la imagen">
-        <input type="text" id="videoNombre" placeholder="Nombre del video">
-        <input type="text" id="nuevaActriz" placeholder="Agregar actriz">
-        <select id="actrizSelect"></select>
-        <input type="text" id="nuevaCategoria" placeholder="Agregar categoría">
-        <select id="categoriaSelect"></select>
-        <input type="text" id="nuevaCarpeta" placeholder="Nueva carpeta">
-        <select id="carpetaSelect"></select>
-        <button onclick="guardarVideo()">Guardar Video</button>
+      <div class="sidebar-stats" id="sidebarStats">
+        <div class="stat-chip">
+          <span class="stat-n" id="statVideos">0</span
+          ><span class="stat-label">Videos</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-n" id="statShorts">0</span
+          ><span class="stat-label">Shorts</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-n" id="statFavs">0</span
+          ><span class="stat-label">Favs</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-n" id="statActrices">0</span
+          ><span class="stat-label">Actrices</span>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <label>Explorar</label>
+        <button
+          class="active"
+          id="navGaleria"
+          onclick="mostrarTab('galeriaTab', this)"
+        >
+          <span class="nav-icon">🎬</span> Galería
+        </button>
+        <button id="navFavoritos" onclick="mostrarTab('favoritosTab', this)">
+          <span class="nav-icon">⭐</span> Favoritos
+        </button>
+        <button onclick="window.location.href = 'actrices.html'">
+          <span class="nav-icon">🌟</span> Actrices
+        </button>
+
+        <label style="margin-top: 12px">Agregar</label>
+        <button id="navNuevoVideo" onclick="mostrarTab('formularioTab', this)">
+          <span class="nav-icon">➕</span> Nuevo Video
+        </button>
+        <button id="navShorts" onclick="mostrarTab('shortsTab', this)">
+          <span class="nav-icon">📱</span> Nuevo Short
+        </button>
+        <button id="navImagenes" onclick="mostrarTab('imagenesTab', this)">
+          <span class="nav-icon">🖼️</span> Nueva Imagen
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <button onclick="exportData()" title="Exportar datos">
+          📤 Exportar
+        </button>
+        <input
+          type="file"
+          id="importFile"
+          style="display: none"
+          accept=".json"
+          onchange="importData(event)"
+        />
+        <button
+          onclick="document.getElementById('importFile').click()"
+          title="Importar datos"
+        >
+          📥 Importar
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+      <!-- ── GALERÍA TAB ── -->
+      <div class="tab active" id="galeriaTab">
+        <div class="main-header">
+          <div>
+            <h2>Galería</h2>
+            <p id="headerSubtitle">Mostrando selección aleatoria</p>
+          </div>
+        </div>
+
+        <div style="padding: 0 28px">
+          <div class="search-bar">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input
+                type="text"
+                id="buscador"
+                placeholder="Buscar por nombre, actriz o categoría…"
+                oninput="filtrarVideos()"
+              />
+            </div>
+            <select
+              class="filter-select"
+              id="categoriaFiltro"
+              onchange="filtrarVideos()"
+            >
+              <option value="">Todas las categorías</option>
+            </select>
+            <select
+              class="filter-select"
+              id="carpetaFiltro"
+              onchange="filtrarVideos()"
+            >
+              <option value="">Todas las carpetas</option>
+            </select>
+          </div>
+
+          <div class="sort-row">
+            <span>Ordenar:</span>
+            <div class="chip active" onclick="setSortMode('random', this)">
+              🔀 Aleatorio
+            </div>
+            <div class="chip" onclick="setSortMode('az', this)">A–Z</div>
+            <div class="chip" onclick="setSortMode('reciente', this)">
+              🕐 Reciente
+            </div>
+          </div>
+
+          <div class="result-count" id="resultCount"></div>
+          <div class="galeria" id="galeria"></div>
+        </div>
+      </div>
+
+      <!-- ── NUEVO VIDEO TAB ── -->
+      <div class="tab" id="formularioTab">
+        <div class="main-header">
+          <div>
+            <h2>Nuevo Video</h2>
+            <p>Agrega un video a tu colección</p>
+          </div>
+        </div>
+        <div style="padding: 0 28px">
+          <div class="form-container">
+            <div class="form-card">
+              <h3>📋 Información del video</h3>
+              <div class="form-group">
+                <label>Nombre del video</label>
+                <input
+                  type="text"
+                  id="videoNombre"
+                  placeholder="Ej: Mi video favorito"
+                />
+              </div>
+              <div class="form-group">
+                <label>Enlace del video</label>
+                <input type="text" id="videoUrl" placeholder="https://…" />
+              </div>
+              <div class="form-group">
+                <label>Enlace de la imagen (thumbnail)</label>
+                <input type="text" id="imageUrl" placeholder="https://…" />
+              </div>
+
+              <div class="form-row-label">Actriz</div>
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0">
+                  <input
+                    type="text"
+                    id="nuevaActriz"
+                    placeholder="Nueva actriz…"
+                  />
+                </div>
+                <div class="form-group" style="margin-bottom: 0">
+                  <select
+                    id="actrizSelect"
+                    class="filter-select"
+                    style="width: 100%"
+                  ></select>
+                </div>
+              </div>
+
+              <div class="form-row-label" style="margin-top: 14px">
+                Categoría
+              </div>
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0">
+                  <input
+                    type="text"
+                    id="nuevaCategoria"
+                    placeholder="Nueva categoría…"
+                  />
+                </div>
+                <div class="form-group" style="margin-bottom: 0">
+                  <select
+                    id="categoriaSelect"
+                    class="filter-select"
+                    style="width: 100%"
+                  ></select>
+                </div>
+              </div>
+
+              <div class="form-row-label" style="margin-top: 14px">Carpeta</div>
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0">
+                  <input
+                    type="text"
+                    id="nuevaCarpeta"
+                    placeholder="Nueva carpeta…"
+                  />
+                </div>
+                <div class="form-group" style="margin-bottom: 0">
+                  <select
+                    id="carpetaSelect"
+                    class="filter-select"
+                    style="width: 100%"
+                  ></select>
+                </div>
+              </div>
+
+              <button class="btn-primary" onclick="guardarVideo()">
+                💾 Guardar Video
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SHORTS TAB ── -->
+      <div class="tab" id="shortsTab">
+        <div class="main-header">
+          <div>
+            <h2>Shorts</h2>
+            <p>Videos cortos</p>
+          </div>
+        </div>
+        <div style="padding: 0 28px">
+          <div class="form-container">
+            <div class="form-card">
+              <h3>📱 Nuevo Short</h3>
+              <div class="form-group">
+                <label>Enlace del short</label>
+                <input type="text" id="shortUrl" placeholder="https://…" />
+              </div>
+              <div class="form-group">
+                <label>Enlace de la imagen</label>
+                <input type="text" id="shortImageUrl" placeholder="https://…" />
+              </div>
+              <button class="btn-primary" onclick="guardarShort()">
+                💾 Guardar Short
+              </button>
+            </div>
+          </div>
+          <div class="result-count" id="resultCountShorts"></div>
+          <div
+            class="galeria"
+            id="galeriaShorts"
+            style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))"
+          ></div>
+        </div>
+      </div>
+
+      <!-- ── IMÁGENES TAB ── -->
+      <div class="tab" id="imagenesTab">
+        <div class="main-header">
+          <div>
+            <h2>Imágenes</h2>
+            <p>Tu galería de imágenes</p>
+          </div>
+        </div>
+        <div style="padding: 0 28px">
+          <div class="form-container">
+            <div class="form-card">
+              <h3>🖼️ Nueva Imagen</h3>
+              <div class="form-group">
+                <label>Enlace de la imagen</label>
+                <input type="text" id="imagenUrl" placeholder="https://…" />
+              </div>
+              <button class="btn-primary" onclick="guardarImagen()">
+                💾 Guardar Imagen
+              </button>
+            </div>
+          </div>
+          <div class="galeria-imagenes" id="galeriaImagenes"></div>
+        </div>
+      </div>
+
+      <!-- ── FAVORITOS TAB ── -->
+      <div class="tab" id="favoritosTab">
+        <div class="main-header">
+          <div>
+            <h2>⭐ Favoritos</h2>
+            <p>Tu colección guardada</p>
+          </div>
+        </div>
+        <div style="padding: 0 28px">
+          <div class="galeria" id="galeriaFavoritos"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- MODAL EDITAR -->
+    <div class="modal-overlay" id="modalOverlay" onclick="cerrarModal(event)">
+      <div class="modal">
+        <button class="modal-close" onclick="cerrarModalBtn()">✕</button>
+        <h3 id="modalTitle">✏️ Editar</h3>
+        <div id="modalBody"></div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="cerrarModalBtn()">
+            Cancelar
+          </button>
+          <button class="btn-confirm" id="modalConfirm">Guardar</button>
+        </div>
       </div>
     </div>
 
-    <div class="tab" id="shortsTab">
-      <div class="formulario">
-        <input type="text" id="shortUrl" placeholder="Enlace del short">
-        <input type="text" id="shortImageUrl" placeholder="Enlace de la imagen">
-        <button onclick="guardarShort()">Guardar Short</button>
-      </div>
-      <div class="galeria" id="galeriaShorts" style="margin-top: 20px;"></div>
-    </div>
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
 
-    <div class="tab" id="imagenesTab">
-      <div class="formulario">
-        <input type="text" id="imagenUrl" placeholder="Enlace de la imagen">
-        <button onclick="guardarImagen()">Guardar Imagen</button>
-      </div>
-      <div class="galeria-imagenes" id="galeriaImagenes" style="margin-top: 20px;"></div>
-    </div>
-
-    <div class="tab" id="favoritosTab">
-      <div class="galeria" id="galeriaFavoritos"></div>
-    </div>
-  </main>
-
-  <script src="scripts.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (!sessionStorage.getItem('autenticado')) {
-        pedirContrasena();
-      } else {
-        cargarDatos();
-      }
-    });
-  </script>
-</body>
+    <script src="scripts.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (!sessionStorage.getItem("autenticado")) {
+          pedirContrasena();
+        } else {
+          cargarDatos();
+          actualizarStats();
+        }
+      });
+    </script>
+  </body>
 </html>
