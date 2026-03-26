@@ -1,56 +1,105 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🌟 Actrices</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <aside>
-    <h1>🌟 Actrices</h1>
-    <button onclick="window.location.href='index.html'">🏠 Volver a Videos</button>
-    <button onclick="agregarNuevaActriz()">➕ Nueva Actriz</button>
-  </aside>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌟 Actrices</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside>
+      <div class="sidebar-logo">
+        <h1>🎥 <span class="logo-accent">VID</span>VAULT</h1>
+      </div>
+      <div class="nav-section">
+        <label>Navegación</label>
+        <button onclick="window.location.href = 'index.html'">
+          <span class="nav-icon">🏠</span> Volver a Videos
+        </button>
+        <button onclick="abrirModalNuevaActriz()">
+          <span class="nav-icon">➕</span> Nueva Actriz
+        </button>
+      </div>
+    </aside>
 
-  <main>
-    <div class="galeria-actrices" id="galeriaActrices"></div>
-  </main>
+    <main>
+      <div class="tab active" id="actrizTab">
+        <div class="main-header">
+          <div>
+            <h2>Actrices</h2>
+            <p id="actrizSubtitle">Cargando…</p>
+          </div>
+        </div>
+        <div style="padding: 0 28px">
+          <div class="search-bar" style="margin-bottom: 20px">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input
+                type="text"
+                id="buscadorActriz"
+                placeholder="Buscar actriz…"
+                oninput="filtrarActrices()"
+              />
+            </div>
+          </div>
+          <div class="galeria-actrices" id="galeriaActrices"></div>
+        </div>
+      </div>
+    </main>
 
-  <script src="scripts.js"></script>
-  <script>
-    function agregarNuevaActriz() {
-      const nombre = prompt("Nombre de la nueva actriz:");
-      if (nombre) {
-        const imagenUrl = prompt("URL de la imagen de la actriz (opcional):");
-        let actrices = getData(actoresKey);
-        
-        const existe = actrices.some(a => 
-          (typeof a === 'string' && a === nombre) || 
-          (typeof a === 'object' && a.nombre === nombre)
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modalOverlay" onclick="cerrarModal(event)">
+      <div class="modal">
+        <button class="modal-close" onclick="cerrarModalBtn()">✕</button>
+        <h3 id="modalTitle">✏️ Actriz</h3>
+        <div id="modalBody"></div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="cerrarModalBtn()">
+            Cancelar
+          </button>
+          <button class="btn-confirm" id="modalConfirm">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="scripts.js"></script>
+    <script>
+      function abrirModalNuevaActriz() {
+        abrirModal(
+          "➕ Nueva Actriz",
+          `
+        <div class="form-group"><label>Nombre</label><input type="text" id="mNombre" placeholder="Nombre de la actriz"></div>
+        <div class="form-group"><label>URL de imagen (opcional)</label><input type="text" id="mImagen" placeholder="https://…"></div>
+      `,
+          () => {
+            const nombre = document.getElementById("mNombre").value.trim();
+            const imagenUrl = document.getElementById("mImagen").value.trim();
+            if (!nombre) return showToast("El nombre es obligatorio", "error");
+
+            let actrices = getData(actoresKey);
+            const existe = actrices.some(
+              (a) => (typeof a === "string" ? a : a.nombre) === nombre,
+            );
+            if (existe) return showToast("Esta actriz ya existe", "error");
+
+            actrices.push(imagenUrl ? { nombre, imagenUrl } : nombre);
+            setData(actoresKey, actrices);
+            cerrarModalBtn();
+            cargarActrices();
+            showToast(`${nombre} agregada ✓`, "success");
+          },
         );
-        
-        if (!existe) {
-          if (imagenUrl) {
-            actrices.push({ nombre, imagenUrl });
-          } else {
-            actrices.push(nombre);
-          }
-          setData(actoresKey, actrices);
-          cargarActrices();
-        } else {
-          alert("Esta actriz ya existe");
-        }
       }
-    }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      if (!sessionStorage.getItem('autenticado')) {
-        window.location.href = 'index.html';
-      } else {
-        cargarActrices();
-      }
-    });
-  </script>
-</body>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (!sessionStorage.getItem("autenticado")) {
+          window.location.href = "index.html";
+        } else {
+          cargarActrices();
+        }
+      });
+    </script>
+  </body>
 </html>
